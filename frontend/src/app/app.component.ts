@@ -116,12 +116,7 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
         
         <hr class="mt-auto border-secondary">
         
-        <!-- Role Switcher -->
-        <div class="mb-2" *ngIf="canSwitchToUser()">
-            <button class="btn w-100 text-white shadow-sm" style="background-color: #2c5f2d; font-size: 0.9rem;" (click)="switchRole('USER'); toggleSidebar()">
-                <i class="bi bi-person-badge"></i> View as User
-            </button>
-        </div>
+
 
         <button class="btn btn-danger w-100" (click)="logout()">Logout</button>
       </div>
@@ -179,10 +174,6 @@ export class AppComponent {
     this.selectedYear = current.year;
   }
 
-  goHome() {
-    this.toggleSidebar();
-  }
-
   isSidebarOpen = false;
 
   toggleSidebar() {
@@ -192,18 +183,7 @@ export class AppComponent {
   currentPeriodStatus: 'OPEN' | 'CLOSED' | undefined;
   currentPeriodId: string | null = null;
 
-  private pollInterval: any;
-
   ngOnInit() {
-    // Subscribe to Role changes to Start/Stop Heartbeat
-    this.authService.userRole$.subscribe(role => {
-      if (role) {
-        this.startPolling();
-      } else {
-        this.stopPolling();
-      }
-    });
-
     // Subscribe to period status to toggle Reports
     this.payrollService.currentPeriod$.subscribe(p => {
       if (p) {
@@ -215,31 +195,8 @@ export class AppComponent {
     });
   }
 
-  startPolling() {
-    // Avoid multiple intervals
-    if (this.pollInterval) return;
-
-    // Immediate check on start (handles page refresh)
-    if (this.authService.getRole()) {
-      this.authService.checkServerSession();
-    }
-
-    this.pollInterval = setInterval(() => {
-      if (this.authService.getRole()) {
-        this.authService.checkServerSession();
-      }
-    }, 3000);
-  }
-
-  stopPolling() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
-    }
-  }
-
-  ngOnDestroy() {
-    this.stopPolling();
+  goHome() {
+    this.toggleSidebar();
   }
 
   isReportsEnabled(): boolean {
@@ -253,22 +210,6 @@ export class AppComponent {
 
   logout() {
     this.authService.logout();
-    window.location.reload();
-  }
-
-  // Role Switching Logic
-  canSwitchToUser(): boolean {
-    return this.authService.getRole() === 'ADMIN';
-  }
-
-  switchRole(target: string) {
-    this.authService.switchRole(target);
-    // Redirect to appropriate landing page
-    if (target === 'ADMIN') {
-      window.location.href = '/admin/employees';
-    } else {
-      window.location.href = '/user/home';
-    }
   }
 
   // Month Selection Logic

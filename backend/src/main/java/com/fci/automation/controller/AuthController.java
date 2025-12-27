@@ -2,46 +2,79 @@ package com.fci.automation.controller;
 
 import com.fci.automation.dto.LoginRequest;
 import com.fci.automation.dto.LoginResponse;
+import com.fci.automation.dto.TokenRefreshRequest;
+import com.fci.automation.dto.TokenRefreshResponse;
+import com.fci.automation.entity.RefreshToken;
+import com.fci.automation.entity.User;
+import com.fci.automation.security.jwt.JwtUtils;
+import com.fci.automation.security.services.RefreshTokenService;
+import com.fci.automation.security.services.UserDetailsImpl;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
+    @Autowired
+    AuthenticationManager authenticationManager;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.fci.automation.service.ServerSessionService sessionService;
+    @Autowired
+    JwtUtils jwtUtils;
 
-    // Mock Login for Prototype
+    @Autowired
+    RefreshTokenService refreshTokenService;
+
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
-        LoginResponse response = new LoginResponse();
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        if ("admin".equals(request.getUsername()) && "admin123".equals(request.getPassword())) {
-            response.setRole("ADMIN");
-            response.setToken("mock-admin-token");
-            response.setMessage("Success");
-        } else if ("user".equals(request.getUsername()) && "user123".equals(request.getPassword())) {
-            response.setRole("USER");
-            response.setToken("mock-user-token");
-            response.setMessage("Success");
-        } else if ("bill".equals(request.getUsername()) && "bill123".equals(request.getPassword())) {
-            response.setRole("BILL");
-            response.setToken("mock-bill-token");
-            response.setMessage("Success");
-        } else {
-            throw new RuntimeException("Invalid Credentials");
-        }
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Return the current server session ID appended to token
-        // This makes the token unique to this server run
-        response.setToken(response.getToken() + ":" + sessionService.getSessionId());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        return response;
+        String jwt = jwtUtils.generateJwtToken(userDetails);
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(LoginResponse.builder()
+                .token(jwt)
+                .refreshToken(refreshToken.getToken())
+                .role(roles.get(0)) // Assuming single role
+                .message("Success")
+                .build());
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenRefreshResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtUtils.generateTokenFromUsername(user.getUsername());
+                    return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
     }
 
     @GetMapping("/status")
     public java.util.Map<String, String> getStatus() {
-        return java.util.Map.of("status", "UP", "sessionId", sessionService.getSessionId());
+        return java.util.Map.of("status", "UP");
     }
 }
