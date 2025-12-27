@@ -98,4 +98,23 @@ public class WebConfig implements WebMvcConfigurer {
 - **Database**: Render (PostgreSQL)
 - **Frontend**: Vercel (Angular)
 
-This setup is completely free for low-volume usage.
+---
+
+## Part 4: File Storage (Critical)
+
+Your application allows users to upload documents (EPF/ESI files). Handling these files depends on where you deploy.
+
+### Option A: VPS / Dedicated Server (Recommended for Simplicity)
+If you deploy using `docker-compose` on a Virtual Private Server (e.g., EC2, DigitalOcean Droplet, Hetzner):
+- **Storage Location**: Files are stored in the Docker Volume (`uploads_data`) on the server's disk.
+- **Persistence**: Data persists as long as the server disk exists. You can back up the specific folder `/var/lib/docker/volumes/...` or the mapped path.
+- **Setup**: The current `docker-compose.yml` is already set up for this. Just run `docker compose up -d` on the server.
+
+### Option B: Cloud Platforms (Render, Heroku, etc.)
+**WARNING**: Most free or simple cloud container platforms (like Render Free Tier) have **Ephemeral Filesystems**. This means **all uploaded files are deleted** every time the app updates or restarts.
+
+To fix this on Render/Heroku:
+1.  **Paid Disk**: You must attach a "Persistent Disk" (Render costs ~$0.25/GB/mo) and mount it to `/app/uploads`.
+2.  **Cloud Storage (Best Practice)**: Modify the application code to upload files to AWS S3, Google Cloud Storage, or Azure Blob Storage instead of the local disk.
+
+**For this MVP**: If using Render Free Tier, be aware that uploaded files will not survive restarts. For production use without code changes, a VPS (Option A) is safer.
