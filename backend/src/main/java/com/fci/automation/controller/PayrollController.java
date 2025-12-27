@@ -111,12 +111,16 @@ public class PayrollController {
     public List<PayrollEntry> getEntries(@PathVariable String periodIdStr) {
         UUID periodId;
         if ("latest".equalsIgnoreCase(periodIdStr)) {
-            PayrollPeriod latest = periodRepository.findAll().stream() // Mock "latest"
-                    .reduce((first, second) -> second)
+            // Find latest by ordering (Year DESC, Month DESC)
+            PayrollPeriod latest = periodRepository.findAllByOrderByYearDescMonthDesc().stream()
+                    .findFirst()
                     .orElseGet(() -> {
+                        // If no periods exist, create a default one (e.g. current month)
+                        // Using dynamic current date instead of hardcoded
+                        java.time.LocalDate now = java.time.LocalDate.now();
                         PayrollPeriod p = new PayrollPeriod();
-                        p.setMonth(11);
-                        p.setYear(2025);
+                        p.setMonth(now.getMonthValue());
+                        p.setYear(now.getYear());
                         p.setStatus(PayrollPeriod.Status.OPEN);
                         return periodRepository.save(p);
                     });
@@ -239,13 +243,14 @@ public class PayrollController {
     @GetMapping("/periods/{periodIdStr}")
     public PayrollPeriod getPeriod(@PathVariable String periodIdStr) {
         if ("latest".equalsIgnoreCase(periodIdStr)) {
-            // Mock latest logic for prototype: find last created or create default
-            return periodRepository.findAll().stream()
-                    .reduce((first, second) -> second)
+            // Find latest by ordering (Year DESC, Month DESC)
+            return periodRepository.findAllByOrderByYearDescMonthDesc().stream()
+                    .findFirst()
                     .orElseGet(() -> {
+                        java.time.LocalDate now = java.time.LocalDate.now();
                         PayrollPeriod p = new PayrollPeriod();
-                        p.setMonth(11);
-                        p.setYear(2025);
+                        p.setMonth(now.getMonthValue());
+                        p.setYear(now.getYear());
                         p.setStatus(PayrollPeriod.Status.OPEN);
                         return periodRepository.save(p);
                     });

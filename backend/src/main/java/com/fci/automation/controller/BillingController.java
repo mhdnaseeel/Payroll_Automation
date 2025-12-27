@@ -12,13 +12,15 @@ import java.util.List;
 @RequestMapping("/api/billing")
 public class BillingController {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BillingController.class);
+
     @Autowired
     private BillingService billingService;
 
     @PostMapping(value = "/issue/extract", consumes = "multipart/form-data")
     public List<IssueSlipDTO> extractIssueData(@RequestParam("files") List<MultipartFile> files) {
         try {
-            System.out.println("Received extraction request for " + files.size() + " files.");
+            logger.info("Received extraction request for {} files.", files.size());
             return billingService.extractIssueData(files);
         } catch (Exception e) {
             e.printStackTrace();
