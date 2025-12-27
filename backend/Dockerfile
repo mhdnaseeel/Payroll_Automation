@@ -13,9 +13,10 @@ COPY src src
 RUN gradle bootJar --no-daemon
 
 # Stage 2: Run the application
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
+COPY ESI.xls .
 
 # Expose port 8080
 EXPOSE 8080
