@@ -21,45 +21,60 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    @Value("${ADMIN_PASSWORD:admin123}")
+    @Value("${ADMIN_USERNAME:admin}")
+    private String adminUsername;
+
+    @Value("${ADMIN_PASSWORD:}")
     private String adminPassword;
 
-    @Value("${USER_PASSWORD:user123}")
+    @Value("${USER_USERNAME:user}")
+    private String userUsername;
+
+    @Value("${USER_PASSWORD:}")
     private String userPassword;
 
-    @Value("${BILL_PASSWORD:bill123}")
+    @Value("${BILL_USERNAME:bill}")
+    private String billUsername;
+
+    @Value("${BILL_PASSWORD:}")
     private String billPassword;
 
     @Override
     public void run(String... args) throws Exception {
-        if (!userRepository.existsByUsername("admin")) {
+        // --- Production Users (Only created if Password Env Var is set) ---
+
+        if (isValid(adminPassword) && !userRepository.existsByUsername(adminUsername)) {
             User admin = new User();
-            admin.setUsername("admin");
+            admin.setUsername(adminUsername);
             admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);
-            userRepository.save(admin);
-            logger.info("SEEDER: Created default admin user.");
+            logger.info("SEEDER: Created default admin user (from Env Var).");
+        } else if (!isValid(adminPassword) && !userRepository.existsByUsername(adminUsername)) {
+            logger.warn("SEEDER: Skipped '{}' creation. ADMIN_PASSWORD not set.", adminUsername);
         }
 
-        if (!userRepository.existsByUsername("user")) {
+        if (isValid(userPassword) && !userRepository.existsByUsername(userUsername)) {
             User user = new User();
-            user.setUsername("user");
+            user.setUsername(userUsername);
             user.setPassword(passwordEncoder.encode(userPassword));
             user.setRole(User.Role.USER);
             userRepository.save(user);
-            userRepository.save(user);
-            logger.info("SEEDER: Created default regular user.");
+            logger.info("SEEDER: Created default regular user (from Env Var).");
         }
 
-        if (!userRepository.existsByUsername("bill")) {
+        if (isValid(billPassword) && !userRepository.existsByUsername(billUsername)) {
             User bill = new User();
-            bill.setUsername("bill");
+            bill.setUsername(billUsername);
             bill.setPassword(passwordEncoder.encode(billPassword));
             bill.setRole(User.Role.BILL);
             userRepository.save(bill);
-            userRepository.save(bill);
-            logger.info("SEEDER: Created default bill user.");
+            logger.info("SEEDER: Created default bill user (from Env Var).");
         }
+
+    }
+
+    private boolean isValid(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }
