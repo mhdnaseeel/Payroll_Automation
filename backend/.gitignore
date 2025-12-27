@@ -1,0 +1,11 @@
+credentials.json
+.gradle
+.DS_Store
+build/
+bin/
+out/
+target/
+*.class
+*.log
+.idea
+*.iml

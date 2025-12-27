@@ -1,0 +1,23 @@
+{
+  "status": "SUCCESS",
+  "section": "ISSUE",
+  "header": {
+    "work_slip_no": "3394",
+    "date_of_operation": "04/11/25",
+    "depot_name": "FSD ARAKULAM",
+    "shed_or_remarks_text": "ISSUE\nदिनांक/ Date ..\n04/11/25\nSed No.\n9\n6\n1\nX :selected:\nNe |operation Date of\nName of Godown/ T.Shed Rly Station\nParticulars of operations performed\nContract item Number\nNo. of bags/ quantity handled\nLedger folio\nRemarks\n04/11/25 AKLM\nCLXIX PART 1(5)\nDSI 11/2025/01=> trucks. work\nH.O Kozhikode . 1230 b/s done by HTC;\nLee\nbreaking the stacks, carring the bags and loading into the\nNasar P. K. Pllayan Kande"
+  },
+  "quantities": {
+    "total_bags_written": "1230 b/s",
+    "bags_up_to_10_high": null,
+    "bags_11_to_16_high": null,
+    "bags_17_to_20_high": null,
+    "bags_above_20_high": null
+  },
+  "qc_details": {
+    "labour_count": null
+  },
+  "confidence": {
+    "overall": "HIGH"
+  }
+}

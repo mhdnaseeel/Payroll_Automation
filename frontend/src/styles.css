@@ -1,0 +1,12 @@
+/* Application Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.table th {
+    background-color: #e9ecef;
+}

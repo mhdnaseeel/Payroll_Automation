@@ -1,0 +1,23 @@
+{
+  "status": "SUCCESS",
+  "section": "ISSUE",
+  "header": {
+    "work_slip_no": "3394",
+    "date_of_operation": "04/11/25",
+    "depot_name": "FSD ARAKULAM",
+    "shed_or_remarks_text": "ISSUE. Sed No. 961. AKLM CLXIX PART 1(5) DSI 11/2025/01=> trucks. work H.O Kozhikode . 1230 b/s done by HTC; breaking the stacks, carring the bags and loading into the."
+  },
+  "quantities": {
+    "total_bags_written": "1230 b/s",
+    "bags_up_to_10_high": null,
+    "bags_11_to_16_high": null,
+    "bags_17_to_20_high": null,
+    "bags_above_20_high": null
+  },
+  "qc_details": {
+    "labour_count": null
+  },
+  "confidence": {
+    "overall": "HIGH"
+  }
+}
