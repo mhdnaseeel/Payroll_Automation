@@ -1,11 +1,19 @@
 package com.fci.automation.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
 @Table(name = "work_slips")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class WorkSlip {
 
     @Id
@@ -63,111 +71,5 @@ public class WorkSlip {
 
     public enum WorkSlipCategory {
         ISSUE, RECEIPT, QC
-    }
-
-    // Getters and Setters
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getSlipNumber() {
-        return slipNumber;
-    }
-
-    public void setSlipNumber(String slipNumber) {
-        this.slipNumber = slipNumber;
-    }
-
-    public WorkSlipCategory getCategory() {
-        return category;
-    }
-
-    public void setCategory(WorkSlipCategory category) {
-        this.category = category;
-    }
-
-    public LocalDate getEntryDate() {
-        return entryDate;
-    }
-
-    public void setEntryDate(LocalDate entryDate) {
-        this.entryDate = entryDate;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public Integer getIssueTotalBags() {
-        return issueTotalBags;
-    }
-
-    public void setIssueTotalBags(Integer issueTotalBags) {
-        this.issueTotalBags = issueTotalBags;
-    }
-
-    public Integer getReceiptTotalBags() {
-        return receiptTotalBags;
-    }
-
-    public void setReceiptTotalBags(Integer receiptTotalBags) {
-        this.receiptTotalBags = receiptTotalBags;
-    }
-
-    public Integer getBagsUpTo10() {
-        return bagsUpTo10;
-    }
-
-    public void setBagsUpTo10(Integer bagsUpTo10) {
-        this.bagsUpTo10 = bagsUpTo10;
-    }
-
-    public Integer getBags11To16() {
-        return bags11To16;
-    }
-
-    public void setBags11To16(Integer bags11To16) {
-        this.bags11To16 = bags11To16;
-    }
-
-    public Integer getBags17To20() {
-        return bags17To20;
-    }
-
-    public void setBags17To20(Integer bags17To20) {
-        this.bags17To20 = bags17To20;
-    }
-
-    public Integer getBagsAbove20() {
-        return bagsAbove20;
-    }
-
-    public void setBagsAbove20(Integer bagsAbove20) {
-        this.bagsAbove20 = bagsAbove20;
-    }
-
-    public Integer getLabourCount() {
-        return labourCount;
-    }
-
-    public void setLabourCount(Integer labourCount) {
-        this.labourCount = labourCount;
-    }
-
-    public String getShedDetails() {
-        return shedDetails;
-    }
-
-    public void setShedDetails(String shedDetails) {
-        this.shedDetails = shedDetails;
     }
 }

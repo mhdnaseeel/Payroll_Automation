@@ -1,11 +1,19 @@
 package com.fci.automation.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
 @Table(name = "payroll_entries")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PayrollEntry {
 
     @Id
@@ -61,120 +69,7 @@ public class PayrollEntry {
     @Column(name = "net_payable", precision = 10, scale = 2)
     private BigDecimal netPayable = BigDecimal.ZERO;
 
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public PayrollPeriod getPeriod() {
-        return period;
-    }
-
-    public void setPeriod(PayrollPeriod period) {
-        this.period = period;
-    }
-
-    public Employee getEmployee() {
-        return employee;
-    }
-
-    public void setEmployee(Employee employee) {
-        this.employee = employee;
-    }
-
-    public Integer getDaysWorked() {
-        return daysWorked;
-    }
-
-    public void setDaysWorked(Integer daysWorked) {
-        this.daysWorked = daysWorked;
-    }
-
-    public java.util.Set<Integer> getActiveDays() {
-        return activeDays;
-    }
-
-    public void setActiveDays(java.util.Set<Integer> activeDays) {
-        this.activeDays = activeDays;
-    }
-
-    public BigDecimal getWagesEarned() {
-        return wagesEarned;
-    }
-
-    public void setWagesEarned(BigDecimal wagesEarned) {
-        this.wagesEarned = wagesEarned;
-    }
-
-    public BigDecimal getAdvanceDeduction() {
-        return advanceDeduction;
-    }
-
-    public void setAdvanceDeduction(BigDecimal advanceDeduction) {
-        this.advanceDeduction = advanceDeduction;
-    }
-
-    public BigDecimal getEpfMemberShare() {
-        return epfMemberShare;
-    }
-
-    public void setEpfMemberShare(BigDecimal epfMemberShare) {
-        this.epfMemberShare = epfMemberShare;
-    }
-
-    public BigDecimal getEpfContractorShare() {
-        return epfContractorShare;
-    }
-
-    public void setEpfContractorShare(BigDecimal epfContractorShare) {
-        this.epfContractorShare = epfContractorShare;
-    }
-
-    public BigDecimal getEsiMemberShare() {
-        return esiMemberShare;
-    }
-
-    public void setEsiMemberShare(BigDecimal esiMemberShare) {
-        this.esiMemberShare = esiMemberShare;
-    }
-
-    public BigDecimal getEsiContractorShare() {
-        return esiContractorShare;
-    }
-
-    public void setEsiContractorShare(BigDecimal esiContractorShare) {
-        this.esiContractorShare = esiContractorShare;
-    }
-
-    public BigDecimal getBonusShare() {
-        return bonusShare;
-    }
-
-    public void setBonusShare(BigDecimal bonusShare) {
-        this.bonusShare = bonusShare;
-    }
-
-    public BigDecimal getNetPayable() {
-        return netPayable;
-    }
-
     // UTR Number (Imported from Bank)
     @Column(name = "utr_number")
     private String utrNumber;
-
-    public String getUtrNumber() {
-        return utrNumber;
-    }
-
-    public void setUtrNumber(String utrNumber) {
-        this.utrNumber = utrNumber;
-    }
-
-    public void setNetPayable(BigDecimal netPayable) {
-        this.netPayable = netPayable;
-    }
 }

@@ -1,11 +1,19 @@
 package com.fci.automation.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "employees")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Employee {
 
     @Id
@@ -40,14 +48,6 @@ public class Employee {
     @Column(name = "inactive_date")
     private java.time.LocalDate inactiveDate;
 
-    public java.time.LocalDate getInactiveDate() {
-        return inactiveDate;
-    }
-
-    public void setInactiveDate(java.time.LocalDate inactiveDate) {
-        this.inactiveDate = inactiveDate;
-    }
-
     public enum Status {
         ACTIVE, INACTIVE
     }
@@ -59,85 +59,4 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private Category category;
-
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getMemberId() {
-        return memberId;
-    }
-
-    public void setMemberId(String memberId) {
-        this.memberId = memberId;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getUanNumber() {
-        return uanNumber;
-    }
-
-    public void setUanNumber(String uanNumber) {
-        this.uanNumber = uanNumber;
-    }
-
-    public String getIpNumber() {
-        return ipNumber;
-    }
-
-    public void setIpNumber(String ipNumber) {
-        this.ipNumber = ipNumber;
-    }
-
-    public String getBankAccountNo() {
-        return bankAccountNo;
-    }
-
-    public void setBankAccountNo(String bankAccountNo) {
-        this.bankAccountNo = bankAccountNo;
-    }
-
-    public String getIfscCode() {
-        return ifscCode;
-    }
-
-    public void setIfscCode(String ifscCode) {
-        this.ifscCode = ifscCode;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
 }
