@@ -36,27 +36,38 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        try {
+            // ROUTING LOGIC: Determine Realm BEFORE Authentication
+            if (loginRequest.getUsername().startsWith("test")) {
+                com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.TEST);
+            } else {
+                com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.REAL);
+            }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = jwtUtils.generateJwtToken(userDetails);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+            String jwt = jwtUtils.generateJwtToken(userDetails);
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
-        return ResponseEntity.ok(LoginResponse.builder()
-                .token(jwt)
-                .refreshToken(refreshToken.getToken())
-                .role(roles.get(0)) // Assuming single role
-                .message("Success")
-                .build());
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .token(jwt)
+                    .refreshToken(refreshToken.getToken())
+                    .role(roles.get(0)) // Assuming single role
+                    .message("Success")
+                    .build());
+        } finally {
+            com.fci.automation.config.RealmContext.clear();
+        }
     }
 
     @PostMapping("/refresh")

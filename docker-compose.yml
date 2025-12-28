@@ -10,6 +10,28 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-hr_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: hr-postgres-test
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: hr_test_db
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -25,27 +47,31 @@ services:
       AZURE_FORM_RECOGNIZER_KEY: ${AZURE_FORM_RECOGNIZER_KEY}
       GOOGLE_AI_STUDIO_API_KEY: ${GOOGLE_AI_STUDIO_API_KEY}
       # Security Credentials
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      USER_USERNAME: ${USER_USERNAME}
-      USER_PASSWORD: ${USER_PASSWORD}
-      BILL_USERNAME: ${BILL_USERNAME}
-      BILL_PASSWORD: ${BILL_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      USER_USERNAME: ${USER_USERNAME:-user}
+      USER_PASSWORD: ${USER_PASSWORD:-user123}
+      BILL_USERNAME: ${BILL_USERNAME:-bill}
+      BILL_PASSWORD: ${BILL_PASSWORD:-bill123}
     volumes:
       - uploads_data:/app/uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      postgres-test:
+        condition: service_healthy
     restart: always
 
   frontend:
     build: ./frontend
     container_name: hr-frontend
     ports:
-      - "80:80"
+      - "4200:80"
     depends_on:
       - backend
     restart: always
 
 volumes:
   postgres_data:
+  postgres_test_data:
   uploads_data:

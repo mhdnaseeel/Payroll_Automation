@@ -1,7 +1,11 @@
 package com.fci.automation.security.jwt;
 
 import com.fci.automation.security.services.UserDetailsImpl;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -20,16 +24,31 @@ public class JwtUtils {
     @Value("${fci.app.jwtSecret:SecretKeyMustBeLongEnoughToLookSecureAndItShouldBeStoredInEnvVariablesButForNowHardcodedIsOkayForDev}")
     private String jwtSecret;
 
-    @Value("${fci.app.jwtExpirationMs:900000}") // 15 minutes default
+    @Value("${fci.app.jwtExpirationMs:900000}")
     private int jwtExpirationMs;
 
     public String generateJwtToken(UserDetailsImpl userPrincipal) {
-        return generateTokenFromUsername(userPrincipal.getUsername());
+        // Determine Realm from Context or Username logic
+        // For simplicity, we rely on the current Context which should be set during
+        // login
+        String realm = com.fci.automation.config.RealmContext.getRealm() != null
+                ? com.fci.automation.config.RealmContext.getRealm().name()
+                : "REAL";
+
+        return Jwts.builder()
+                .setSubject(userPrincipal.getUsername())
+                .claim("realm", realm) // Embed Realm
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String generateTokenFromUsername(String username) {
+        // Fallback or Test usage
         return Jwts.builder()
                 .setSubject(username)
+                .claim("realm", "REAL") // Default
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -43,6 +62,11 @@ public class JwtUtils {
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public String getRealmFromJwtToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().get("realm", String.class);
     }
 
     public boolean validateJwtToken(String authToken) {

@@ -32,6 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+
+                // 1. EXTRACT REALM from Token
+                String realmStr = jwtUtils.getRealmFromJwtToken(jwt);
+                com.fci.automation.config.RealmEnum realm = com.fci.automation.config.RealmEnum.valueOf(realmStr);
+
+                // 2. SET CONTEXT (Crucial: Database Switching happens here)
+                com.fci.automation.config.RealmContext.setRealm(realm);
+
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -45,9 +53,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);
+        } finally {
+            // Safety: Ensure we don't leak context to next request in pool
+            // Note: We cannot clear here because the Controller needs the context
+            // downstream to query DB.
+            // Ideally, clear AFTER the request is fully processed.
+            // However, for OnePerRequestFilter, the chain.doFilter happens inside.
+            // So we should try-finally around the chain.
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            com.fci.automation.config.RealmContext.clear();
+        }
     }
 
     private String parseJwt(HttpServletRequest request) {

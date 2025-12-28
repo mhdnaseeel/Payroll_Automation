@@ -21,37 +21,51 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    @Value("${ADMIN_USERNAME:admin}")
+    @Value("${ADMIN_USERNAME}")
     private String adminUsername;
 
-    @Value("${ADMIN_PASSWORD:}")
+    @Value("${ADMIN_PASSWORD}")
     private String adminPassword;
 
-    @Value("${USER_USERNAME:user}")
+    @Value("${USER_USERNAME}")
     private String userUsername;
 
-    @Value("${USER_PASSWORD:}")
+    @Value("${USER_PASSWORD}")
     private String userPassword;
 
-    @Value("${BILL_USERNAME:bill}")
+    @Value("${BILL_USERNAME}")
     private String billUsername;
 
-    @Value("${BILL_PASSWORD:}")
+    @Value("${BILL_PASSWORD}")
     private String billPassword;
 
     @Override
     public void run(String... args) throws Exception {
-        // --- Production Users (Only created if Password Env Var is set) ---
+        // Seed REAL Realm
+        try {
+            com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.REAL);
+            seedRealRealm();
+        } finally {
+            com.fci.automation.config.RealmContext.clear();
+        }
 
+        // Seed TEST Realm
+        try {
+            com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.TEST);
+            seedTestRealm();
+        } finally {
+            com.fci.automation.config.RealmContext.clear();
+        }
+    }
+
+    private void seedRealRealm() {
         if (isValid(adminPassword) && !userRepository.existsByUsername(adminUsername)) {
             User admin = new User();
-            admin.setUsername(adminUsername);
+            admin.setUsername(adminUsername); // "admin"
             admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(User.Role.ADMIN);
             userRepository.save(admin);
-            logger.info("SEEDER: Created default admin user (from Env Var).");
-        } else if (!isValid(adminPassword) && !userRepository.existsByUsername(adminUsername)) {
-            logger.warn("SEEDER: Skipped '{}' creation. ADMIN_PASSWORD not set.", adminUsername);
+            logger.info("SEEDER [REAL]: Created admin user '{}'.", adminUsername);
         }
 
         if (isValid(userPassword) && !userRepository.existsByUsername(userUsername)) {
@@ -60,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
             user.setPassword(passwordEncoder.encode(userPassword));
             user.setRole(User.Role.USER);
             userRepository.save(user);
-            logger.info("SEEDER: Created default regular user (from Env Var).");
+            logger.info("SEEDER [REAL]: Created user '{}'.", userUsername);
         }
 
         if (isValid(billPassword) && !userRepository.existsByUsername(billUsername)) {
@@ -69,9 +83,26 @@ public class DataSeeder implements CommandLineRunner {
             bill.setPassword(passwordEncoder.encode(billPassword));
             bill.setRole(User.Role.BILL);
             userRepository.save(bill);
-            logger.info("SEEDER: Created default bill user (from Env Var).");
+            logger.info("SEEDER [REAL]: Created bill user '{}'.", billUsername);
         }
+    }
 
+    private void seedTestRealm() {
+        // Hardcoded Test Users for Test Realm as per requirements
+        createTestUser("testadmin", User.Role.ADMIN);
+        createTestUser("testuser", User.Role.USER);
+        createTestUser("testbill", User.Role.BILL);
+    }
+
+    private void createTestUser(String username, User.Role role) {
+        if (!userRepository.existsByUsername(username)) {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode("test")); // Default test password
+            user.setRole(role);
+            userRepository.save(user);
+            logger.info("SEEDER [TEST]: Created user '{}'.", username);
+        }
     }
 
     private boolean isValid(String value) {

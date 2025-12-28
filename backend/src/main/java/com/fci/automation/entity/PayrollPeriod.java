@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payroll_periods_v2", uniqueConstraints = {
+@Table(name = "payroll_periods", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "period_month", "period_year" })
 })
 public class PayrollPeriod {
