@@ -17,6 +17,7 @@ data/
 
 # Deployment and development documentation (local use only)
 deployment_guide.md
+DEPLOYMENT_CHECKLIST.md
 
 # Python test/inspection scripts
 *.py
@@ -26,3 +27,19 @@ deployment_guide.md
 
 # VSCode settings (optional - uncomment if you want to ignore)
 # .vscode/
+
+# Backend debug artifacts
+backend/debug_runs/
+backend/test_image.jpg
+backend/uploads/
+
+# Frontend build artifacts
+frontend/dist/
+frontend/.angular/
+frontend/node_modules/
+
+# Build outputs
+target/
+build/
+*.log
+*.tmp
