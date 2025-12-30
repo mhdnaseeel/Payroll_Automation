@@ -14,3 +14,15 @@ node_modules
 
 Workslip/
 data/
+
+# Deployment and development documentation (local use only)
+deployment_guide.md
+
+# Python test/inspection scripts
+*.py
+
+# macOS system files
+.DS_Store
+
+# VSCode settings (optional - uncomment if you want to ignore)
+# .vscode/
