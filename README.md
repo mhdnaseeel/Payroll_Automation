@@ -1,37 +1,64 @@
-# FCI Payroll Automation Web App
+# HR Automation System
 
-This is a full-stack application replacing the legacy Excel tool.
+A full-stack web application for automating HR and payroll processes with multi-tenant support.
+
+## Tech Stack
+- **Backend**: Java 17 + Spring Boot + PostgreSQL
+- **Frontend**: Angular 17
+- **Deployment**: Docker + Docker Compose
 
 ## Prerequisites
-To run this project, you need the following installed on your machine:
-1.  **Java 17** (or higher)
-2.  **Node.js & NPM**
-3.  **PostgreSQL** (Optional for prototype, uses in-memory/setup dependent)
+To run this project locally, you need:
+1. **Docker** and **Docker Compose**
+2. **Azure Document Intelligence** credentials (for document extraction)
+3. **Google AI Studio** API key (for AI-powered features)
 
-## How to Run (Verified Test Environment)
+## Local Development Setup
 
-> [!IMPORTANT]
-> The project assumes you are running in the **Isolated Test Environment**. This ensures no data pollution in production.
-
-### Quick Start
-To start the application with `testadmin` credentials and a clean database:
+### 1. Configure Environment Variables
+Create a `.env` file in the project root (use `.env.example` as template):
 
 ```bash
-docker-compose -f docker-compose.test.yml up --build
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=hr_db
+
+# Azure Document Intelligence
+AZURE_FORM_RECOGNIZER_ENDPOINT=your_azure_endpoint
+AZURE_FORM_RECOGNIZER_KEY=your_azure_key
+
+# Google AI Studio
+GOOGLE_AI_STUDIO_API_KEY=your_google_api_key
 ```
 
-### Access Points
-- **Frontend**: [http://localhost:81](http://localhost:81)
-- **Backend API**: [http://localhost:8081](http://localhost:8081)
-- **Database**: `hr_test_db` (Port 5433)
+### 2. Start the Application
+```bash
+docker compose up -d
+```
 
-### Default Credentials
-Use these credentials to login to the Test Environment.
+### 3. Access the Application
+- **Frontend**: http://localhost:4200
+- **Backend API**: http://localhost:8080
+- **PostgreSQL**: localhost:5432
 
-| Role | Username | Password |
-| :--- | :--- | :--- |
-| **Admin** | `testadmin` | `test` |
-| **User** | `testuser` | `test` |
-| **Bill** | `testbill` | `test` |
+### 4. Stop the Application
+```bash
+docker compose down
+```
 
-*Note: This environment runs on separate ports and uses a separate database volume.*
+### 5. Clean All Data (Fresh Start)
+```bash
+docker compose down -v
+```
+
+## Deployment
+
+For production deployment instructions, see the `deployment_guide.md` file (local only, not in Git).
+
+## Features
+- Multi-tenant payroll management
+- Employee data management
+- EPF/ESI report generation
+- Document extraction using AI
+- Billing module for FCI operations
