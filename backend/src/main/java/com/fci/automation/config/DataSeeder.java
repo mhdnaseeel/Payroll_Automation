@@ -59,6 +59,9 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedRealRealm() {
+        logger.info("SEEDER [REAL]: Configured Admin Password (starts with): '{}'",
+                adminPassword.length() > 2 ? adminPassword.substring(0, 2) + "***" : "***");
+
         seedUser(adminUsername, adminPassword, User.Role.ADMIN);
         seedUser(userUsername, userPassword, User.Role.USER);
         seedUser(billUsername, billPassword, User.Role.BILL);
