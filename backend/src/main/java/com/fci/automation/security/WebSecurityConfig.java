@@ -57,11 +57,9 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(java.util.List.of(
+                    corsConfiguration.setAllowedOriginPatterns(java.util.List.of(
                             "http://localhost:4200",
-                            "https://payroll-automation-19tu59xzu-naseeels-projects.vercel.app",
-                            "https://fci-automation-frontend.vercel.app",
-                            "https://payroll-automation.vercel.app"));
+                            "https://*.vercel.app"));
                     corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
