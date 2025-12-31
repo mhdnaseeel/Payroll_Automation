@@ -59,32 +59,42 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedRealRealm() {
-        if (isValid(adminPassword) && !userRepository.existsByUsername(adminUsername)) {
-            User admin = new User();
-            admin.setUsername(adminUsername); // "admin"
-            admin.setPassword(passwordEncoder.encode(adminPassword));
-            admin.setRole(User.Role.ADMIN);
-            userRepository.save(admin);
-            logger.info("SEEDER [REAL]: Created admin user '{}'.", adminUsername);
+        seedUser(adminUsername, adminPassword, User.Role.ADMIN);
+        seedUser(userUsername, userPassword, User.Role.USER);
+        seedUser(billUsername, billPassword, User.Role.BILL);
+    }
+
+    private void seedUser(String username, String password, User.Role role) {
+        if (!isValid(password)) {
+            return;
         }
 
-        if (isValid(userPassword) && !userRepository.existsByUsername(userUsername)) {
-            User user = new User();
-            user.setUsername(userUsername);
-            user.setPassword(passwordEncoder.encode(userPassword));
-            user.setRole(User.Role.USER);
-            userRepository.save(user);
-            logger.info("SEEDER [REAL]: Created user '{}'.", userUsername);
-        }
-
-        if (isValid(billPassword) && !userRepository.existsByUsername(billUsername)) {
-            User bill = new User();
-            bill.setUsername(billUsername);
-            bill.setPassword(passwordEncoder.encode(billPassword));
-            bill.setRole(User.Role.BILL);
-            userRepository.save(bill);
-            logger.info("SEEDER [REAL]: Created bill user '{}'.", billUsername);
-        }
+        userRepository.findByUsername(username).ifPresentOrElse(
+                user -> {
+                    // Update existing user
+                    boolean changed = false;
+                    if (!passwordEncoder.matches(password, user.getPassword())) {
+                        user.setPassword(passwordEncoder.encode(password));
+                        changed = true;
+                    }
+                    if (user.getRole() != role) {
+                        user.setRole(role);
+                        changed = true;
+                    }
+                    if (changed) {
+                        userRepository.save(user);
+                        logger.info("SEEDER [REAL]: Updated user '{}'.", username);
+                    }
+                },
+                () -> {
+                    // Create new user
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setRole(role);
+                    userRepository.save(user);
+                    logger.info("SEEDER [REAL]: Created user '{}'.", username);
+                });
     }
 
     private void seedTestRealm() {
