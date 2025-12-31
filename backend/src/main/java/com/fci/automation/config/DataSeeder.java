@@ -21,22 +21,22 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    @Value("${ADMIN_USERNAME:admin}")
+    @Value("${app.admin.username}")
     private String adminUsername;
 
-    @Value("${ADMIN_PASSWORD:SecureAdminPass2024!}")
+    @Value("${app.admin.password}")
     private String adminPassword;
 
-    @Value("${USER_USERNAME:user}")
+    @Value("${app.user.username}")
     private String userUsername;
 
-    @Value("${USER_PASSWORD:SecureUserPass2024!}")
+    @Value("${app.user.password}")
     private String userPassword;
 
-    @Value("${BILL_USERNAME:bill}")
+    @Value("${app.bill.username}")
     private String billUsername;
 
-    @Value("${BILL_PASSWORD:SecureBillPass2024!}")
+    @Value("${app.bill.password}")
     private String billPassword;
 
     @Override
