@@ -39,8 +39,19 @@ public class DataSeeder implements CommandLineRunner {
     @Value("${app.bill.password}")
     private String billPassword;
 
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Override
     public void run(String... args) throws Exception {
+        // Ensure "test" schema exists using REAL connection (default)
+        try {
+            logger.info("SEEDER: Ensuring 'test' schema exists...");
+            jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS test");
+        } catch (Exception e) {
+            logger.warn("SEEDER: Warning creating schema 'test': {}", e.getMessage());
+        }
+
         // Seed REAL Realm
         try {
             com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.REAL);
