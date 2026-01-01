@@ -100,15 +100,37 @@ public class PayrollController {
         }
     }
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     // 1.1 List All Periods (For History/Reports)
     @GetMapping("/periods")
     public List<PayrollPeriod> getAllPeriods() {
+        // DEBUG: Trace active schema
+        try {
+            String searchPath = jdbcTemplate.queryForObject("SHOW search_path", String.class);
+            String currentSchema = jdbcTemplate.queryForObject("SELECT current_schema()", String.class);
+            System.out
+                    .println("DEBUG [PayrollController.getAllPeriods]: search_path=" + searchPath + ", current_schema="
+                            + currentSchema + ", Realm=" + com.fci.automation.config.RealmContext.getRealm());
+        } catch (Exception e) {
+            System.err.println("DEBUG [PayrollController]: Failed to log schema: " + e.getMessage());
+        }
         return periodRepository.findAllByOrderByYearDescMonthDesc();
     }
 
     // 2. Load Entry Sheet (Grid)
     @GetMapping("/periods/{periodIdStr}/entries")
     public List<PayrollEntry> getEntries(@PathVariable String periodIdStr) {
+        // DEBUG: Trace active schema
+        try {
+            String searchPath = jdbcTemplate.queryForObject("SHOW search_path", String.class);
+            String currentSchema = jdbcTemplate.queryForObject("SELECT current_schema()", String.class);
+            System.out.println("DEBUG [PayrollController.getEntries]: search_path=" + searchPath + ", current_schema="
+                    + currentSchema + ", Realm=" + com.fci.automation.config.RealmContext.getRealm());
+        } catch (Exception e) {
+            System.err.println("DEBUG [PayrollController]: Failed to log schema: " + e.getMessage());
+        }
         UUID periodId;
         if ("latest".equalsIgnoreCase(periodIdStr)) {
             // Find latest by ordering (Year DESC, Month DESC)
