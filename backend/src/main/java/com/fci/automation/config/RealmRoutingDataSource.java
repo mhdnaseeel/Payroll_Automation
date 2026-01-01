@@ -9,6 +9,9 @@ public class RealmRoutingDataSource extends AbstractRoutingDataSource {
     @Override
     protected Object determineCurrentLookupKey() {
         RealmEnum realm = RealmContext.getRealm();
+        if (realm == null) {
+            logger.warn("ROUTING FAILURE: RealmContext is NULL. Request will fail.");
+        }
         // logger.info("ROUTING: resolving datasource key -> {}", realm);
         // Commented out to avoid log spam, but useful for deep debug if needed.
         return realm;

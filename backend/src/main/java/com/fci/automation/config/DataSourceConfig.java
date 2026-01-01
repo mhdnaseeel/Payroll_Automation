@@ -74,8 +74,9 @@ public class DataSourceConfig {
 
         routingDataSource.setTargetDataSources(targetDataSources);
 
-        // Default to REAL if something goes wrong (Safety net)
-        routingDataSource.setDefaultTargetDataSource(realDataSource());
+        // REMOVED DEFAULT FALLBACK: If RealmContext is null, this should fail rather
+        // than leaking Public data.
+        // routingDataSource.setDefaultTargetDataSource(realDataSource());
 
         return routingDataSource;
     }
