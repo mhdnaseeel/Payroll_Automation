@@ -42,6 +42,9 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private org.springframework.core.io.ResourceLoader resourceLoader;
+
     @Override
     public void run(String... args) throws Exception {
         // Ensure "test" schema exists using REAL connection (default)
@@ -60,12 +63,41 @@ public class DataSeeder implements CommandLineRunner {
             com.fci.automation.config.RealmContext.clear();
         }
 
-        // Seed TEST Realm
+        // Seed TEST Realm (Create Tables & Data)
         try {
             com.fci.automation.config.RealmContext.setRealm(com.fci.automation.config.RealmEnum.TEST);
+
+            // MANUALLY initialize Test Schema Tables (Hibernate ddl-auto only handles
+            // Default Schema)
+            initializeTestSchema();
+
             seedTestRealm();
         } finally {
             com.fci.automation.config.RealmContext.clear();
+        }
+    }
+
+    private void initializeTestSchema() {
+        try {
+            logger.info("SEEDER [TEST]: Initializing Schema Tables from db-init.sql...");
+            // Verify Search Path
+            String searchPath = jdbcTemplate.queryForObject("SHOW search_path", String.class);
+            logger.info("SEEDER [TEST]: Current Search Path: {}", searchPath);
+
+            org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:db-init.sql");
+            String sql = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+
+            // Execute SQL script
+            // Breaking comments/statements for simple execution
+            String[] statements = sql.split(";");
+            for (String stmt : statements) {
+                if (!stmt.trim().isEmpty()) {
+                    jdbcTemplate.execute(stmt);
+                }
+            }
+            logger.info("SEEDER [TEST]: Tables initialized successfully.");
+        } catch (Exception e) {
+            logger.error("SEEDER [TEST]: Failed to initialize database tables: {}", e.getMessage());
         }
     }
 
