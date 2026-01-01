@@ -1,5 +1,6 @@
 package com.fci.automation.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -48,15 +49,19 @@ public class DataSourceConfig {
             System.err.println("DataSourceConfig WARNING: Could not ensure 'test' schema exists: " + e.getMessage());
         }
 
-        // EXPLICITLY build the Test DataSource with the schema parameter
-        // We do this programmatically so we don't have to put it in
-        // application.properties (which causes startup checks to fail)
-        return DataSourceBuilder.create()
-                .url(realUrl + "?currentSchema=test")
+        // STRICT ISOLATION: Use HikariDataSource to enforce schema at connection level
+        HikariDataSource ds = DataSourceBuilder.create()
+                .type(HikariDataSource.class)
+                .url(realUrl)
                 .username(realUsername)
                 .password(realPassword)
                 .driverClassName("org.postgresql.Driver")
                 .build();
+
+        // This forces every connection from this pool to start with this schema
+        ds.setSchema("test");
+
+        return ds;
     }
 
     @Bean
