@@ -41,12 +41,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 com.fci.automation.config.RealmContext.setRealm(realm);
 
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                String role = jwtUtils.getRoleFromJwtToken(jwt); // Extract Role
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                // OPTIMIZED: Create Principal directly without DB call
+                java.util.List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = java.util.Collections
+                        .singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority(role));
+
+                // Use a simple UserDetails implementation or just the required principal info
+                org.springframework.security.core.userdetails.User principal = new org.springframework.security.core.userdetails.User(
+                        username, "", authorities);
+
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails,
+                        principal,
                         null,
-                        userDetails.getAuthorities());
+                        authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

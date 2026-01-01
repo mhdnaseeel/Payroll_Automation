@@ -35,9 +35,13 @@ public class JwtUtils {
                 ? com.fci.automation.config.RealmContext.getRealm().name()
                 : "REAL";
 
+        String role = userPrincipal.getAuthorities().stream().findFirst().map(item -> item.getAuthority())
+                .orElse("USER");
+
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .claim("realm", realm) // Embed Realm
+                .claim("role", role) // Embed Role
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -45,10 +49,14 @@ public class JwtUtils {
     }
 
     public String generateTokenFromUsername(String username) {
-        // Fallback or Test usage
+        // Fallback or Test usage - defaulting to USER role if unknown (or should update
+        // signature)
+        // For refresh token flow, we might need to fetch user again if we want role,
+        // but for now let's assume this method is used for simple cases or testing.
         return Jwts.builder()
                 .setSubject(username)
                 .claim("realm", "REAL") // Default
+                .claim("role", "USER") // Default
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
@@ -57,6 +65,11 @@ public class JwtUtils {
 
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    }
+
+    public String getRoleFromJwtToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().get("role", String.class);
     }
 
     public String getUserNameFromJwtToken(String token) {
