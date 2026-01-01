@@ -52,7 +52,7 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @org.springframework.beans.factory.annotation.Value("${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://*.vercel.app}")
+    @org.springframework.beans.factory.annotation.Value("${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://*.vercel.app,https://workflowautomation.vercel.app}")
     private String corsAllowedOrigins;
 
     @Bean
@@ -60,7 +60,8 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOriginPatterns(java.util.Arrays.asList(corsAllowedOrigins.split(",")));
+                    corsConfiguration.setAllowedOriginPatterns(
+                            java.util.Arrays.stream(corsAllowedOrigins.split(",")).map(String::trim).toList());
                     corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
