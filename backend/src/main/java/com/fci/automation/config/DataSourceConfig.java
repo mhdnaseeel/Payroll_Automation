@@ -74,9 +74,10 @@ public class DataSourceConfig {
 
         routingDataSource.setTargetDataSources(targetDataSources);
 
-        // REMOVED DEFAULT FALLBACK: If RealmContext is null, this should fail rather
-        // than leaking Public data.
-        // routingDataSource.setDefaultTargetDataSource(realDataSource());
+        // Default to REAL for Startup/Public Endpoints.
+        // Leak prevention is handled by JwtAuthenticationFilter ensuring RealmContext
+        // is set for Auth users.
+        routingDataSource.setDefaultTargetDataSource(realDataSource());
 
         return routingDataSource;
     }

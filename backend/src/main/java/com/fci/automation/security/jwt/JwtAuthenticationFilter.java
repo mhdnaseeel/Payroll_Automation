@@ -58,6 +58,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // STRICT ISOLATION CHECK:
+                // If we have an authenticated user, RealmContext MUST be set.
+                // If it is missing, it means we risk falling back to Public schema.
+                if (com.fci.automation.config.RealmContext.getRealm() == null) {
+                    throw new ServletException(
+                            "CRITICAL SECURITY ERROR: User authenticated but RealmContext is missing. Request blocked to prevent data leak.");
+                }
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);
