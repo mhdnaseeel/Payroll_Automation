@@ -48,8 +48,15 @@ public class DataSourceConfig {
             System.err.println("DataSourceConfig WARNING: Could not ensure 'test' schema exists: " + e.getMessage());
         }
 
-        // Return builder for the TEST property namespace
-        return DataSourceBuilder.create().build();
+        // EXPLICITLY build the Test DataSource with the schema parameter
+        // We do this programmatically so we don't have to put it in
+        // application.properties (which causes startup checks to fail)
+        return DataSourceBuilder.create()
+                .url(realUrl + "?currentSchema=test")
+                .username(realUsername)
+                .password(realPassword)
+                .driverClassName("org.postgresql.Driver")
+                .build();
     }
 
     @Bean
