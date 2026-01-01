@@ -17,6 +17,15 @@ import java.util.Map;
 @EnableJpaRepositories(basePackages = "com.fci.automation.repository", transactionManagerRef = "transactionManager")
 public class DataSourceConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${spring.datasource.real.jdbc-url}")
+    private String realUrl;
+
+    @org.springframework.beans.factory.annotation.Value("${spring.datasource.real.username}")
+    private String realUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${spring.datasource.real.password}")
+    private String realPassword;
+
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource.real")
     public DataSource realDataSource() {
@@ -26,6 +35,20 @@ public class DataSourceConfig {
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource.test")
     public DataSource testDataSource() {
+        // SAFETY: Ensure 'test' schema exists using the REAL connection (which defaults
+        // to public or no schema)
+        // This prevents startup crashes when the Test DataSource tries to connect to a
+        // non-existent schema.
+        try (java.sql.Connection conn = java.sql.DriverManager.getConnection(realUrl, realUsername, realPassword);
+                java.sql.Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE SCHEMA IF NOT EXISTS test");
+        } catch (Exception e) {
+            // Log warning but proceed; if schema creation fails due to permissions, the app
+            // might still work if schema exists.
+            System.err.println("DataSourceConfig WARNING: Could not ensure 'test' schema exists: " + e.getMessage());
+        }
+
+        // Return builder for the TEST property namespace
         return DataSourceBuilder.create().build();
     }
 
