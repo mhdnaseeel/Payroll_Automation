@@ -52,7 +52,7 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @org.springframework.beans.factory.annotation.Value("${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://*.vercel.app,https://workflowautomation.vercel.app}")
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins}")
     private String corsAllowedOrigins;
 
     @Bean
