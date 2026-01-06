@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hr_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hr_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hr_net
+
+  backend:
+    build: ./backend
+    container_name: hr_backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Explicitly override custom properties to avoid localhost default
+      SPRING_DATASOURCE_REAL_JDBC_URL: jdbc:postgresql://postgres:5432/hr_db
+      SPRING_DATASOURCE_REAL_USERNAME: postgres
+      SPRING_DATASOURCE_REAL_PASSWORD: password
+      SPRING_DATASOURCE_TEST_JDBC_URL: jdbc:postgresql://postgres:5432/hr_db
+      SPRING_DATASOURCE_TEST_USERNAME: postgres
+      SPRING_DATASOURCE_TEST_PASSWORD: password
+
+      # Dummy keys for startup
+      AZURE_FORM_RECOGNIZER_ENDPOINT: "https://dummy.cognitiveservices.azure.com/"
+      AZURE_FORM_RECOGNIZER_KEY: "dummy"
+      GOOGLE_AI_STUDIO_API_KEY: "dummy"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hr_net
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build: ./frontend
+    container_name: hr_frontend
+    ports:
+      - "4200:80" # Map host 4200 to container 80 (Nginx)
+    depends_on:
+      - backend
+    networks:
+      - hr_net
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+
+networks:
+  hr_net:
+    driver: bridge

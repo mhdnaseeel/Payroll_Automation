@@ -77,10 +77,10 @@ public class ReportService {
                 PdfPTable table = new PdfPTable(16);
                 table.setWidthPercentage(100);
                 table.setWidths(new float[] {
-                        3, 10, 8, 8, 8, 5, 4, 6,
-                        5, 5, 5,
-                        5, 5, 5,
-                        5, 6
+                        2.5f, 13f, 8f, 7f, 9.5f, 5f, 3f, 6f,
+                        4.5f, 4.5f, 4.5f,
+                        4.5f, 4.5f, 4.5f,
+                        5f, 7f
                 });
 
                 // --- HEADER ---
@@ -160,20 +160,29 @@ public class ReportService {
                         displayWages = new BigDecimal(days).multiply(new BigDecimal("541"));
                     }
 
-                    addCell(table, String.valueOf(displayWages), dataFont); // Column H
+                    // Wages (H)
+                    addCell(table, String.valueOf(displayWages.setScale(0, java.math.RoundingMode.HALF_UP)), dataFont);
 
-                    addCell(table, String.valueOf(entry.getEpfContractorShare()), dataFont);
-                    addCell(table, String.valueOf(entry.getEpfMemberShare()), dataFont);
-                    addCell(table, String.valueOf(epfTotal), dataFont);
+                    addCell(table,
+                            String.valueOf(entry.getEpfContractorShare().setScale(0, java.math.RoundingMode.HALF_UP)),
+                            dataFont);
+                    addCell(table,
+                            String.valueOf(entry.getEpfMemberShare().setScale(0, java.math.RoundingMode.HALF_UP)),
+                            dataFont);
+                    addCell(table, String.valueOf(epfTotal.setScale(0, java.math.RoundingMode.HALF_UP)), dataFont);
 
-                    addCell(table, String.valueOf(entry.getEsiContractorShare()), dataFont);
-                    addCell(table, String.valueOf(entry.getEsiMemberShare()), dataFont);
-                    addCell(table, String.valueOf(esiTotal), dataFont);
+                    addCell(table,
+                            String.valueOf(entry.getEsiContractorShare().setScale(0, java.math.RoundingMode.HALF_UP)),
+                            dataFont);
+                    addCell(table,
+                            String.valueOf(entry.getEsiMemberShare().setScale(0, java.math.RoundingMode.HALF_UP)),
+                            dataFont);
+                    addCell(table, String.valueOf(esiTotal.setScale(0, java.math.RoundingMode.HALF_UP)), dataFont);
 
                     // Advance (O5)
                     BigDecimal advance = entry.getAdvanceDeduction() != null ? entry.getAdvanceDeduction()
                             : BigDecimal.ZERO;
-                    addCell(table, String.valueOf(advance), dataFont);
+                    addCell(table, String.valueOf(advance.setScale(0, java.math.RoundingMode.HALF_UP)), dataFont);
 
                     // In-Hand Salary (Net Pay)
                     // Formula: Wages - EPF Member - ESI Member - Advance
@@ -183,7 +192,7 @@ public class ReportService {
                             .subtract(entry.getEsiMemberShare())
                             .subtract(advance);
 
-                    addCell(table, String.valueOf(inHand), dataFont);
+                    addCell(table, String.valueOf(inHand.setScale(0, java.math.RoundingMode.HALF_UP)), dataFont);
 
                     // Accumulate Totals
                     totalDays += days;
@@ -211,18 +220,20 @@ public class ReportService {
                         .getFont(com.lowagie.text.FontFactory.HELVETICA_BOLD, 9);
 
                 addCell(table, String.valueOf(totalDays), totalFont);
-                addCell(table, String.valueOf(totalWages), totalFont);
+                addCell(table, String.valueOf(totalWages.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
 
-                addCell(table, String.valueOf(totalEpfContractor), totalFont);
-                addCell(table, String.valueOf(totalEpfMember), totalFont);
-                addCell(table, String.valueOf(totalEpfTotal), totalFont);
+                addCell(table, String.valueOf(totalEpfContractor.setScale(0, java.math.RoundingMode.HALF_UP)),
+                        totalFont);
+                addCell(table, String.valueOf(totalEpfMember.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
+                addCell(table, String.valueOf(totalEpfTotal.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
 
-                addCell(table, String.valueOf(totalEsiContractor), totalFont);
-                addCell(table, String.valueOf(totalEsiMember), totalFont);
-                addCell(table, String.valueOf(totalEsiTotal), totalFont);
+                addCell(table, String.valueOf(totalEsiContractor.setScale(0, java.math.RoundingMode.HALF_UP)),
+                        totalFont);
+                addCell(table, String.valueOf(totalEsiMember.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
+                addCell(table, String.valueOf(totalEsiTotal.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
 
-                addCell(table, String.valueOf(totalAdvance), totalFont);
-                addCell(table, String.valueOf(totalInHand), totalFont);
+                addCell(table, String.valueOf(totalAdvance.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
+                addCell(table, String.valueOf(totalInHand.setScale(0, java.math.RoundingMode.HALF_UP)), totalFont);
 
                 document.add(table);
             }
@@ -258,7 +269,11 @@ public class ReportService {
     }
 
     public byte[] generateEsiExcel(UUID periodId) {
-        try (java.io.FileInputStream fis = new java.io.FileInputStream("ESI.xls");
+        java.io.InputStream fis = getClass().getClassLoader().getResourceAsStream("ESI.xls");
+        if (fis == null) {
+            throw new RuntimeException("ESI.xls template not found in classpath");
+        }
+        try (fis;
                 Workbook workbook = new HSSFWorkbook(fis);
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
@@ -618,8 +633,7 @@ public class ReportService {
             java.util.Map<com.fci.automation.entity.Employee.Category, List<PayrollEntry>> grouped = allEntries.stream()
                     .collect(java.util.stream.Collectors.groupingBy(e -> e.getEmployee().getCategory()));
 
-            com.fci.automation.entity.Employee.Category[] cats = { com.fci.automation.entity.Employee.Category.HL,
-                    com.fci.automation.entity.Employee.Category.CL };
+            com.fci.automation.entity.Employee.Category[] cats = { com.fci.automation.entity.Employee.Category.HL };
 
             boolean firstIdx = true;
             for (com.fci.automation.entity.Employee.Category cat : cats) {

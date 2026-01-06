@@ -66,10 +66,90 @@ public class PayrollImportServiceTest {
         String result = importService.importUtrData(file, periodId);
 
         // Assert
-        // Expect success count 1
-        // If logic is broken, it will likely return "Import Complete: 0 Updated"
-        // because it searched for "'123456"
         Assertions.assertTrue(result.contains("1 Updated"), "Should update 1 record. Result: " + result);
         Assertions.assertEquals("UTR001", mockEntry.getUtrNumber(), "UTR should be set (stripping quote if present)");
+    }
+
+    @Test
+    public void testImportPayroll_WithTextAndEmptyValues() throws Exception {
+        UUID periodId = UUID.randomUUID();
+        PayrollPeriod mockPeriod = new PayrollPeriod();
+        mockPeriod.setId(periodId);
+
+        Mockito.when(periodRepository.findById(periodId)).thenReturn(Optional.of(mockPeriod));
+
+        // Employee Mock
+        Employee mockEmployee = new Employee();
+        mockEmployee.setId(UUID.randomUUID());
+        mockEmployee.setCategory(Employee.Category.HL); // Regular
+        Mockito.when(employeeRepository.findByMemberId("MEM01")).thenReturn(Optional.of(mockEmployee));
+
+        // Entry Mock
+        PayrollEntry mockEntry = new PayrollEntry();
+        mockEntry.setId(UUID.randomUUID());
+        Mockito.when(entryRepository.findByPeriodIdAndEmployeeId(periodId, mockEmployee.getId()))
+                .thenReturn(Optional.of(mockEntry));
+
+        // Create Excel with 2 rows
+        // MemberID | Name | Days | Wages | Advance
+        // MEM01 | Test | 20 | 1000 | '1500 (Text)
+        // MEM01 | Test | 20 | 1000 | (Empty) -> Should reset to 0
+
+        try (org.apache.poi.ss.usermodel.Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Import");
+
+            // Header
+            org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("MEMBER_ID");
+            header.createCell(2).setCellValue("DAYS_WORKED");
+            header.createCell(3).setCellValue("WAGES_EARNED");
+            header.createCell(4).setCellValue("ADVANCE");
+
+            // Row 1: Text Advance "1500"
+            org.apache.poi.ss.usermodel.Row row1 = sheet.createRow(1);
+            row1.createCell(0).setCellValue("MEM01");
+            row1.createCell(2).setCellValue(20);
+            row1.createCell(3).setCellValue(1000);
+            row1.createCell(4).setCellValue("1500"); // Text format
+
+            workbook.write(out);
+
+            MockMultipartFile file1 = new MockMultipartFile("file", "test.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", out.toByteArray());
+
+            // Act 1
+            importService.importPayroll(file1, periodId);
+
+            // Assert 1
+            Assertions.assertEquals(new java.math.BigDecimal("1500"), mockEntry.getAdvanceDeduction(),
+                    "Should parse text '1500' as BigDecimal");
+
+            // Row 2: Empty Advance
+            out.reset();
+            try (org.apache.poi.ss.usermodel.Workbook wb2 = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+                org.apache.poi.ss.usermodel.Sheet s2 = wb2.createSheet("Import");
+                s2.createRow(0); // Header (empty is fine for this test logic as strict check skips it, but lets
+                                 // keep index)
+                org.apache.poi.ss.usermodel.Row r1 = s2.createRow(1);
+                r1.createCell(0).setCellValue("MEM01");
+                r1.createCell(2).setCellValue(20);
+                r1.createCell(3).setCellValue(1000);
+                r1.createCell(4); // Null/Blank (Advance)
+
+                wb2.write(out);
+            }
+
+            MockMultipartFile file2 = new MockMultipartFile("file", "test2.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", out.toByteArray());
+
+            // Act 2
+            importService.importPayroll(file2, periodId);
+
+            // Assert 2
+            Assertions.assertEquals(java.math.BigDecimal.ZERO, mockEntry.getAdvanceDeduction(),
+                    "Should reset Advance to 0 if cell is empty");
+        }
     }
 }

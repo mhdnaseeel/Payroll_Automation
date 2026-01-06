@@ -109,10 +109,10 @@ public class PayrollImportService {
     }
 
     private void processRow(Row row, PayrollPeriod period) {
-        // Col 0: MEMBER_ID (was EMP_CODE)
+        // Col 0: MEMBER_ID
         Cell memberIdCell = row.getCell(0);
         if (memberIdCell == null)
-            return; // Skip empty row
+            return;
 
         String memberId = getCellValueAsString(memberIdCell);
         if (memberId.trim().isEmpty())
@@ -131,24 +131,23 @@ public class PayrollImportService {
         }
 
         // Col 2: DAYS_WORKED
-        Cell daysCell = row.getCell(2);
-        if (daysCell != null) {
-            entry.setDaysWorked((int) daysCell.getNumericCellValue());
-        }
+        // Always overwrite. If null/empty -> 0
+        int daysWorked = getCellValueAsInteger(row.getCell(2));
+        entry.setDaysWorked(daysWorked);
 
         // Col 3: WAGES_EARNED
-        Cell wagesCell = row.getCell(3);
-        if (wagesCell != null && wagesCell.getCellType() == CellType.NUMERIC) {
-            entry.setWagesEarned(BigDecimal.valueOf(wagesCell.getNumericCellValue()));
-        }
+        // Always overwrite. If null/empty -> 0.00
+        BigDecimal wages = getCellValueAsBigDecimal(row.getCell(3));
+        entry.setWagesEarned(wages);
 
         // Col 4: ADVANCE
-        Cell advanceCell = row.getCell(4);
-        if (advanceCell != null && advanceCell.getCellType() == CellType.NUMERIC) {
-            entry.setAdvanceDeduction(BigDecimal.valueOf(advanceCell.getNumericCellValue()));
-        }
+        // Always overwrite. If null/empty -> 0.00
+        BigDecimal advance = getCellValueAsBigDecimal(row.getCell(4));
+        System.out.println("DEBUG IMPORT: Row " + row.getRowNum() + " | Member: " + memberId + " | Advance Cell: "
+                + row.getCell(4) + " | Parsed Advance: " + advance);
+        entry.setAdvanceDeduction(advance);
 
-        // Trigger Calculation (Handles Logic for CL/HL Wages automatically)
+        // Trigger Calculation
         calculatorService.calculate(entry);
 
         entryRepository.save(entry);
@@ -157,13 +156,99 @@ public class PayrollImportService {
     private String getCellValueAsString(Cell cell) {
         if (cell == null)
             return "";
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Assume ID is int-like
-            default:
-                return "";
+        try {
+            return switch (cell.getCellType()) {
+                case STRING -> cell.getStringCellValue();
+                case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+                case FORMULA -> {
+                    try {
+                        yield String.valueOf((int) cell.getNumericCellValue());
+                    } catch (Exception e) {
+                        try {
+                            yield cell.getStringCellValue();
+                        } catch (Exception ex) {
+                            yield "";
+                        }
+                    }
+                }
+                case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+                default -> "";
+            };
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private BigDecimal getCellValueAsBigDecimal(Cell cell) {
+        if (cell == null)
+            return BigDecimal.ZERO;
+
+        try {
+            switch (cell.getCellType()) {
+                case NUMERIC:
+                    return BigDecimal.valueOf(cell.getNumericCellValue());
+                case STRING:
+                    String val = cell.getStringCellValue().trim();
+                    if (val.isEmpty())
+                        return BigDecimal.ZERO;
+                    try {
+                        return new BigDecimal(val);
+                    } catch (NumberFormatException e) {
+                        // Handle "1,500" or similar if needed, commonly simple replace
+                        val = val.replace(",", "");
+                        try {
+                            return new BigDecimal(val);
+                        } catch (NumberFormatException ex) {
+                            return BigDecimal.ZERO; // Not a number
+                        }
+                    }
+                case FORMULA:
+                    try {
+                        return BigDecimal.valueOf(cell.getNumericCellValue());
+                    } catch (Exception e) {
+                        return BigDecimal.ZERO;
+                    }
+                case BLANK:
+                    return BigDecimal.ZERO;
+                default:
+                    return BigDecimal.ZERO;
+            }
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private Integer getCellValueAsInteger(Cell cell) {
+        if (cell == null)
+            return 0;
+        try {
+            switch (cell.getCellType()) {
+                case NUMERIC:
+                    return (int) cell.getNumericCellValue();
+                case STRING:
+                    String val = cell.getStringCellValue().trim();
+                    if (val.isEmpty())
+                        return 0;
+                    try {
+                        return Integer.parseInt(val); // Strict int
+                    } catch (NumberFormatException e) {
+                        try {
+                            return (int) Double.parseDouble(val); // Handle "5.0"
+                        } catch (NumberFormatException ex) {
+                            return 0;
+                        }
+                    }
+                case FORMULA:
+                    try {
+                        return (int) cell.getNumericCellValue();
+                    } catch (Exception e) {
+                        return 0;
+                    }
+                default:
+                    return 0;
+            }
+        } catch (Exception e) {
+            return 0;
         }
     }
 

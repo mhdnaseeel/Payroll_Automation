@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200", exposedHeaders = "Content-Disposition")
 public class ReportController {
 
     @Autowired
@@ -99,7 +99,7 @@ public class ReportController {
 
         com.fci.automation.entity.PayrollPeriod period = periodRepository.findById(periodId).orElseThrow();
         String monthName = java.time.Month.of(period.getMonth()).name().toLowerCase().substring(0, 3);
-        String filename = String.format("bulk_%s%d.txt", monthName, period.getYear());
+        String filename = String.format("%s_bulk_payment.txt", monthName);
 
         String txt = reportService.generateBulkTxt(periodId, paymentDate);
         return ResponseEntity.ok()

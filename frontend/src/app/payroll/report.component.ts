@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -229,6 +228,15 @@ export class ReportComponent implements OnInit {
         let filename = `${type}_report.pdf`;
         if (type === 'esi') filename = 'esi_return.xls';
         if (type === 'epf') filename = 'epf_return.txt';
+        if (type === 'bulk') {
+          const p = this.periods.find(p => p.id === this.selectedPeriodId);
+          if (p) {
+            const m = this.getMonthName(p.month).substring(0, 3).toLowerCase();
+            filename = `${m}_bulk_payment.txt`;
+          } else {
+            filename = 'bulk_payment.txt';
+          }
+        }
 
         const contentDisposition = response.headers.get('Content-Disposition');
         if (contentDisposition) {
