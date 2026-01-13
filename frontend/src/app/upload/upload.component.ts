@@ -37,8 +37,11 @@ import { PayrollService, PayrollPeriod } from '../payroll/payroll.service';
                 <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeChange()">
                   <option value="ESI">ESI</option>
                   <option value="EPF">EPF</option>
+                  <option value="Bank Slip">Bank Slip</option>
                 </select>
               </div>
+
+
 
               <div class="mb-3">
                 <label class="form-label">Sub Type</label>
@@ -199,9 +202,12 @@ export class UploadComponent implements OnInit {
     if (this.selectedType === 'ESI') {
       this.availableSubTypes = ['Contribution Report', 'ESIC'];
       this.selectedSubType = 'Contribution Report';
-    } else {
+    } else if (this.selectedType === 'EPF') {
       this.availableSubTypes = ['ECR', 'Payment Receipt'];
       this.selectedSubType = 'ECR';
+    } else if (this.selectedType === 'Bank Slip') {
+      this.availableSubTypes = ['Payment Slip'];
+      this.selectedSubType = 'Payment Slip';
     }
     this.checkExisting();
   }

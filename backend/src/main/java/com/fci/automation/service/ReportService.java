@@ -314,7 +314,7 @@ public class ReportService {
                 row.createCell(3).setCellValue(wages.doubleValue());
 
                 // Col 4: Reason Code (0 wages -> 1, else 0)
-                String reasonCode = (wages.compareTo(BigDecimal.ZERO) == 0) ? "1" : "0";
+                String reasonCode = (wages.compareTo(BigDecimal.ZERO) == 0) ? "1" : "";
                 row.createCell(4).setCellValue(reasonCode);
 
                 // Col 5: Last Working Day
@@ -346,11 +346,11 @@ public class ReportService {
                 grossWages = entry.getWagesEarned() != null ? entry.getWagesEarned() : BigDecimal.ZERO;
             }
 
-            // 2. EPF Wages = Gross
-            BigDecimal epfWages = grossWages;
+            // 2. EPF Wages = Min(Gross, 15000)
+            BigDecimal cap = new BigDecimal("15000");
+            BigDecimal epfWages = (grossWages.compareTo(cap) > 0) ? cap : grossWages;
 
             // 3. EPS Wages = Min(Gross, 15000)
-            BigDecimal cap = new BigDecimal("15000");
             BigDecimal epsWages = (grossWages.compareTo(cap) > 0) ? cap : grossWages;
 
             // 4. EDLI Wages = EPS Wages (Same Cap)
