@@ -1,0 +1,20 @@
+# Binary models (downloaded/extracted)
+*.traineddata
+*.lstm
+
+# Generated intermediates
+*.lstmf
+*.box
+*.tif
+*.png
+# Keep the original jpg
+!*.jpg
+
+# Compiled Java
+*.class
+
+# Training output checkpoints
+output/
+
+# Logs
+*.log

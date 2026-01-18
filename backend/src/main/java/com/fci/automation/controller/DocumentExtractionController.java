@@ -1,7 +1,7 @@
 package com.fci.automation.controller;
 
 import com.fci.automation.dto.WorkSlipResult;
-import com.fci.automation.service.GoogleAIStudioService;
+import com.fci.automation.service.MistralAIService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,9 +17,9 @@ public class DocumentExtractionController {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentExtractionController.class);
 
-    private final GoogleAIStudioService extractionService;
+    private final MistralAIService extractionService;
 
-    public DocumentExtractionController(GoogleAIStudioService extractionService) {
+    public DocumentExtractionController(MistralAIService extractionService) {
         this.extractionService = extractionService;
     }
 

@@ -16,6 +16,13 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+    
+    <repositories>
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
     <dependencies>
         <!-- Spring Boot Starters -->
         <dependency>
@@ -86,10 +93,11 @@
         </dependency>
 
         <!-- Azure & AI -->
+        <!-- Tesseract OCR -->
         <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-ai-formrecognizer</artifactId>
-            <version>4.1.0</version>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>5.9.0</version>
         </dependency>
 
         <!-- Utilities -->
@@ -121,6 +129,25 @@
                 <configuration>
                     <!-- Ensures the jar is executable -->
                     <executable>true</executable>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

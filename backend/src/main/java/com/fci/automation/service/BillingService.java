@@ -22,15 +22,15 @@ public class BillingService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final WorkSlipRepository workSlipRepository;
-    private final GoogleAIStudioService googleAIStudioService;
+    private final MistralAIService mistralAIService;
 
-    public BillingService(WorkSlipRepository workSlipRepository, GoogleAIStudioService googleAIStudioService) {
+    public BillingService(WorkSlipRepository workSlipRepository, MistralAIService mistralAIService) {
         this.workSlipRepository = workSlipRepository;
-        this.googleAIStudioService = googleAIStudioService;
+        this.mistralAIService = mistralAIService;
     }
 
     /**
-     * EXTRACT ISSUE DATA (Google AI Direct)
+     * EXTRACT ISSUE DATA (Mistral AI Direct)
      */
     public List<IssueSlipDTO> extractIssueData(List<MultipartFile> files) {
         List<IssueSlipDTO> extractedSlips = new ArrayList<>();
@@ -41,14 +41,14 @@ public class BillingService {
             dto.setSiNo(String.valueOf(siCounter++));
 
             try {
-                // Call Google AI
-                WorkSlipResult result = googleAIStudioService.extractWorkSlip(file);
+                // Call Mistral AI
+                WorkSlipResult result = mistralAIService.extractWorkSlip(file);
 
                 // Map Result to DTO
                 mapResultToDTO(dto, result);
 
             } catch (Exception e) {
-                logger.error("Google AI Extraction Failed for file: " + file.getOriginalFilename(), e);
+                logger.error("Mistral AI Extraction Failed for file: " + file.getOriginalFilename(), e);
                 dto.setStatus("NEEDS_VERIFICATION");
                 dto.setWarningMessage("Extraction Error: " + e.getMessage());
             }
@@ -59,50 +59,89 @@ public class BillingService {
     }
 
     private void mapResultToDTO(IssueSlipDTO dto, WorkSlipResult result) {
-        if ("SUCCESS".equalsIgnoreCase(result.getStatus())) {
-            dto.setStatus("EXTRACTED");
-            dto.setConfidenceScore(0.95);
-            dto.setWarningMessage(null);
+        // Validation: Check for "Issue" OR presence of specific fields
+        boolean isIssue = "Issue".equalsIgnoreCase(result.getIssue());
+        boolean hasSlipNo = result.getWorkSlipNo() != null && !result.getWorkSlipNo().isEmpty();
 
-            // Map Header
-            if (result.getHeader() != null) {
-                dto.setSlipNumber(result.getHeader().getWorkSlipNo());
-
-                String dateStr = result.getHeader().getDateOfOperation();
-                if (dateStr != null && !dateStr.equalsIgnoreCase("NULL")) {
-                    try {
-                        dto.setEntryDate(LocalDate.parse(dateStr, DATE_FORMATTER));
-                    } catch (Exception e) {
-                        logger.warn("Date parse error: {}", dateStr);
-                        // Leave null or try other formats if needed
-                    }
-                }
-            }
-
-            // Map Quantities
-            if (result.getQuantities() != null) {
-                String totalStr = result.getQuantities().getTotalBagsWritten();
-                if (totalStr != null && !totalStr.equalsIgnoreCase("NULL")) {
-                    try {
-                        dto.setTotalBags(Integer.parseInt(totalStr));
-                    } catch (NumberFormatException e) {
-                        logger.warn("Total bags parse error: {}", totalStr);
-                    }
-                }
-            }
-
-            // Clause/Part are not determining factors in the new prompt, but we can try to
-            // extract from shed/remarks if needed
-            // For now leaving them null as per stricter prompt instructions ("NO MORE NO
-            // LESS")
-            dto.setClause(null);
-            dto.setPart(null);
-
-        } else {
+        if (!isIssue && !hasSlipNo) {
+            // Strictly reject only if BOTH indicators are missing
             dto.setStatus("REJECTED");
-            dto.setConfidenceScore(0.0);
-            dto.setWarningMessage(result.getStatus() + ": Not a valid Work Slip");
+            dto.setWarningMessage("Document not identified as 'Issue' slip.");
+            return;
         }
+
+        // Map Fields
+        dto.setSlipNumber(result.getWorkSlipNo());
+
+        // Date Mapping
+        String dateStr = result.getDate();
+        if (dateStr != null && !dateStr.equalsIgnoreCase("null")) {
+            try {
+                // Normalize date string: replace separators with slashes
+                String cleanDate = dateStr.replace(".", "/").replace(" ", "/").replace("-", "/");
+
+                // Remove non-numeric/slash characters
+                cleanDate = cleanDate.replaceAll("[^0-9/]", "");
+
+                // Fix single digit parts? e.g. "11/2/5" -> "11/02/05"
+                String[] parts = cleanDate.split("/");
+                if (parts.length == 3) {
+                    // Normalize Day
+                    if (parts[0].length() == 1)
+                        parts[0] = "0" + parts[0];
+                    // Normalize Month
+                    if (parts[1].length() == 1)
+                        parts[1] = "0" + parts[1];
+                    // Normalize Year (Handle 1, 2, or 3 digits)
+                    String yearPart = parts[2];
+                    if (yearPart.length() == 1) {
+                        parts[2] = "200" + yearPart;
+                    } else if (yearPart.length() == 2) {
+                        parts[2] = "20" + yearPart;
+                    } else if (yearPart.length() == 3) {
+                        // Handle noise like "125" -> "25" -> "2025"
+                        parts[2] = "20" + yearPart.substring(1);
+                    }
+
+                    cleanDate = parts[0] + "/" + parts[1] + "/" + parts[2];
+                }
+
+                // Use robust formatter handling yyyy
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                dto.setEntryDate(LocalDate.parse(cleanDate, formatter));
+            } catch (Exception e) {
+                logger.warn("Date parse error: {} (original: {})", e.getMessage(), dateStr);
+                dto.setWarningMessage("Check Date: " + dateStr);
+            }
+        }
+
+        // Bags Mapping
+        dto.setTotalBags(result.getBags());
+
+        // Final Status Determination
+        if (dto.getSlipNumber() != null && dto.getEntryDate() != null && dto.getTotalBags() != null) {
+            dto.setStatus("EXTRACTED");
+            dto.setConfidenceScore(1.0);
+            dto.setWarningMessage(null);
+        } else {
+            dto.setStatus("NEEDS_VERIFICATION");
+            // Build descriptive warning
+            List<String> missing = new ArrayList<>();
+            if (dto.getSlipNumber() == null)
+                missing.add("Slip No");
+            if (dto.getEntryDate() == null)
+                missing.add("Date");
+            if (dto.getTotalBags() == null)
+                missing.add("Bags");
+
+            String existingWarn = dto.getWarningMessage();
+            String newWarn = "Missing: " + String.join(", ", missing);
+
+            dto.setWarningMessage(existingWarn == null ? newWarn : existingWarn + "; " + newWarn);
+        }
+
+        dto.setClause(null);
+        dto.setPart(null);
     }
 
     /**
