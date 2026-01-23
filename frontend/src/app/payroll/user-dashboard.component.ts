@@ -17,8 +17,9 @@ import { MonthSelectionService } from '../core/services/month-selection.service'
         <div class="col-lg-8">
           
           <div class="text-center mb-4">
-              <h1 class="display-4 fw-bold text-dark">Payroll Dashboard</h1>
-              <p class="text-muted lead">Manage monthly payroll submissions effortlessly</p>
+              <h1 class="display-5 fw-bold text-dark d-none d-md-block">Payroll Dashboard</h1>
+              <h2 class="fw-bold text-dark d-md-none">Payroll Dashboard</h2>
+              <p class="text-muted lead small-mobile">Manage monthly payroll submissions effortlessly</p>
           </div>
 
           

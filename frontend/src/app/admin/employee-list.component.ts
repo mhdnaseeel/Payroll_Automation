@@ -26,9 +26,9 @@ interface Employee {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="container mt-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 gap-md-0">
         <h2>Employee Master (Admin)</h2>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
             <input type="file" #fileInput (change)="onFileSelected($event)" style="display:none" accept=".xlsx, .xls">
             <button class="btn border-0 shadow-sm text-white" style="background-color: #2c5f2d; font-weight: 500;" (click)="fileInput.click()">
                 <i class="bi bi-upload"></i> Import Excel
@@ -39,7 +39,8 @@ interface Employee {
 
       <div class="card shadow">
         <div class="card-body p-0">
-          <table class="table table-striped mb-0">
+          <div class="table-responsive">
+            <table class="table table-striped mb-0 text-nowrap">
             <thead class="text-white" style="background-color: #0f2615;">
               <tr>
                 <th class="py-3 ps-3 rounded-top-left" style="border-bottom: 3px solid #1e4d2b;">Member ID</th>
@@ -72,6 +73,7 @@ interface Employee {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       

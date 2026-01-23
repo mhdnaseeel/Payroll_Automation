@@ -2,7 +2,12 @@
 set -e
 
 # 1. Setup
-DATA_DIR="/app/training_data"
+# 1. Setup
+if [ -d "/app/training_data" ]; then
+    DATA_DIR="/app/training_data"
+else
+    DATA_DIR="."
+fi
 cd $DATA_DIR
 echo "----------------------------------------"
 echo "Starting Tesseract Fine-Tuning Demo"
@@ -22,11 +27,11 @@ combine_tessdata -e eng.traineddata eng.lstm
 
 # 3.5 Generate Synthetic Data (Fixes Segmentation Issues)
 echo "[2.5/5] Generating Synthetic Training Image using text2image..."
-# Using DejaVu Sans which is available in the container
+# Using Verdana which is available on macOS
 text2image --text=eng.fci.exp0.gt.txt \
            --outputbase=eng.fci.exp0 \
-           --font="DejaVu Sans" \
-           --fonts_dir=/usr/share/fonts/truetype/dejavu \
+           --font="Verdana" \
+           --fonts_dir=/System/Library/Fonts/Supplemental \
            --ptsize 12
 
 # 4. Generate LSTMF from Synthetic TIF

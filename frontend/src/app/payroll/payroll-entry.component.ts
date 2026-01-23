@@ -31,7 +31,7 @@ interface PayrollEntry {
     <div class="container-fluid py-4 min-vh-100 bg-light">
       
       <!-- 1. Header Section -->
-      <div class="d-flex justify-content-between align-items-center mb-4 px-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 px-3 gap-3 gap-md-0">
         <div>
            <h2 class="fw-bold mb-0 text-dark">
              <i class="bi bi-grid-3x3-gap me-2 text-success"></i>Monthly Payroll Entry 
@@ -78,7 +78,7 @@ interface PayrollEntry {
       <!-- 2. Data Grid (Card) -->
       <div class="card border-0 shadow-sm mx-3 overflow-hidden rounded-3">
         <div class="table-responsive">
-          <table class="table table-hover mb-0 align-middle">
+          <table class="table table-hover mb-0 align-middle text-nowrap">
             <thead class="bg-dark text-white">
               <tr>
                 <th class="py-3 px-4">Employee</th>

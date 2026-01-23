@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="d-flex justify-content-center align-items-center vh-100" style="background-color: #f2f0eb;">
-      <div class="col-md-4">
+      <div class="col-11 col-sm-8 col-md-6 col-lg-4">
         <div class="card shadow-lg border-0 rounded-4" style="background-color: #ffffff;">
           <div class="card-header text-center py-4 rounded-top-4" style="background-color: #0f2615; color: #e8e6e1; border-bottom: 4px solid #1e4d2b;">
             <h3 class="mb-0 fw-bold" style="letter-spacing: 1px;">FCI Automation</h3>

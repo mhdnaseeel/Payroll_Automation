@@ -26,7 +26,7 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
          <!-- Close Button (Mobile/Drawer) -->
          <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0">FCI Payroll</h4>
-            <button class="btn btn-sm btn-outline-light border-0" (click)="toggleSidebar()">
+            <button class="btn btn-sm btn-outline-light border-0 d-lg-none" (click)="toggleSidebar()">
                 <i class="bi bi-x-lg"></i>
             </button>
          </div>
@@ -122,9 +122,9 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
       </div>
 
       <!-- Main Content -->
-      <div class="flex-grow-1 h-100 overflow-auto">
+      <div class="flex-grow-1 h-100 overflow-auto main-content-wrapper">
          <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 px-4 sticky-top">
-            <button class="btn btn-link text-dark me-3 p-0" (click)="toggleSidebar()" title="Menu">
+            <button class="btn btn-link text-dark me-3 p-0 d-lg-none" (click)="toggleSidebar()" title="Menu">
                 <i class="bi bi-list fs-3"></i>
             </button>
             <span class="navbar-brand h1 mb-0">Dashboard</span>
@@ -145,7 +145,7 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
           width: 250px;
           position: fixed;
           top: 0;
-          left: -260px; /* Hidden by default */
+          left: -260px; /* Hidden by default on mobile */
           background-color: #0f2615;
           transition: left 0.3s ease-in-out;
           z-index: 1050;
@@ -158,6 +158,19 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
           top: 0; left: 0; right: 0; bottom: 0;
           background: rgba(0,0,0,0.5);
           z-index: 1040;
+      }
+
+      /* Desktop Styles */
+      @media (min-width: 992px) {
+        .sidebar {
+            left: 0 !important; /* Always visible */
+        }
+        .sidebar-overlay {
+            display: none !important; /* No overlay on desktop */
+        }
+        .main-content-wrapper {
+            margin-left: 250px; /* Push content */
+        }
       }
     </style>
   `
