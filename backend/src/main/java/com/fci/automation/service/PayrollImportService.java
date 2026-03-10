@@ -109,17 +109,21 @@ public class PayrollImportService {
     }
 
     private void processRow(Row row, PayrollPeriod period) {
-        // Col 0: MEMBER_ID
-        Cell memberIdCell = row.getCell(0);
-        if (memberIdCell == null)
+        // Col 1: MEMBER_NAME (match by name)
+        Cell nameCell = row.getCell(1);
+        if (nameCell == null)
             return;
 
-        String memberId = getCellValueAsString(memberIdCell);
-        if (memberId.trim().isEmpty())
+        String memberName = getCellValueAsString(nameCell).trim();
+        if (memberName.isEmpty())
             return;
 
-        Employee employee = employeeRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new RuntimeException("Employee not found with Member ID: " + memberId));
+        // Find employee by name (case-insensitive match)
+        List<Employee> allEmployees = employeeRepository.findAll();
+        Employee employee = allEmployees.stream()
+                .filter(emp -> emp.getFullName() != null && emp.getFullName().trim().equalsIgnoreCase(memberName))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Employee not found with Name: " + memberName));
 
         // Find or Create Entry
         PayrollEntry entry = entryRepository.findByPeriodIdAndEmployeeId(period.getId(), employee.getId())
@@ -131,20 +135,15 @@ public class PayrollImportService {
         }
 
         // Col 2: DAYS_WORKED
-        // Always overwrite. If null/empty -> 0
         int daysWorked = getCellValueAsInteger(row.getCell(2));
         entry.setDaysWorked(daysWorked);
 
         // Col 3: WAGES_EARNED
-        // Always overwrite. If null/empty -> 0.00
         BigDecimal wages = getCellValueAsBigDecimal(row.getCell(3));
         entry.setWagesEarned(wages);
 
         // Col 4: ADVANCE
-        // Always overwrite. If null/empty -> 0.00
         BigDecimal advance = getCellValueAsBigDecimal(row.getCell(4));
-        System.out.println("DEBUG IMPORT: Row " + row.getRowNum() + " | Member: " + memberId + " | Advance Cell: "
-                + row.getCell(4) + " | Parsed Advance: " + advance);
         entry.setAdvanceDeduction(advance);
 
         // Trigger Calculation

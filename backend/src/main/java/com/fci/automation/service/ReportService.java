@@ -279,12 +279,9 @@ public class ReportService {
 
             Sheet sheet = workbook.getSheetAt(0);
             List<PayrollEntry> entries = entryRepository.findByPeriodId(periodId);
-            PayrollPeriod period = periodRepository.findById(periodId).orElseThrow();
 
             // Date Format for Col 5
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String lastWorkingDate = period.getLastWorkingDay() != null ? period.getLastWorkingDay().format(formatter)
-                    : "";
 
             int rowIdx = 1; // Start from Row 1 (Header is 0)
             for (PayrollEntry entry : entries) {
@@ -313,12 +310,28 @@ public class ReportService {
                 }
                 row.createCell(3).setCellValue(wages.doubleValue());
 
-                // Col 4: Reason Code (0 wages -> 1, else 0)
-                String reasonCode = (wages.compareTo(BigDecimal.ZERO) == 0) ? "1" : "";
-                row.createCell(4).setCellValue(reasonCode);
+                // Col 4: Reason Code per ESI Instructions & Reason Codes
+                // Col 5: Last Working Day (only when days=0 and reason requires it)
+                String reasonCode;
+                String lastDay = "";
 
-                // Col 5: Last Working Day
-                row.createCell(5).setCellValue(lastWorkingDate);
+                if (days > 0) {
+                    // Employee worked — Reason Code = 0, no last working day
+                    reasonCode = "0";
+                } else {
+                    // Zero working days — determine reason
+                    if (entry.getEmployee().getStatus() == com.fci.automation.entity.Employee.Status.INACTIVE
+                            && entry.getEmployee().getInactiveDate() != null) {
+                        // Left Service (Code 2) — provide last working day
+                        reasonCode = "2";
+                        lastDay = entry.getEmployee().getInactiveDate().format(formatter);
+                    } else {
+                        // On Leave (Code 1) — no last working day
+                        reasonCode = "1";
+                    }
+                }
+                row.createCell(4).setCellValue(reasonCode);
+                row.createCell(5).setCellValue(lastDay);
             }
 
             workbook.write(out);
@@ -743,7 +756,12 @@ public class ReportService {
             document.open();
 
             PayrollPeriod period = periodRepository.findById(periodId).orElseThrow();
+            java.time.LocalDate periodStart = java.time.LocalDate.of(period.getYear(), period.getMonth(), 1);
             List<PayrollEntry> activeEntries = entryRepository.findByPeriodId(periodId).stream()
+                    .filter(e -> {
+                        java.time.LocalDate inactiveDate = e.getEmployee().getInactiveDate();
+                        return inactiveDate == null || !inactiveDate.isBefore(periodStart);
+                    })
                     .filter(e -> e.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL)
                     .sorted((e1, e2) -> e1.getEmployee().getFullName().compareTo(e2.getEmployee().getFullName()))
                     .collect(java.util.stream.Collectors.toList());

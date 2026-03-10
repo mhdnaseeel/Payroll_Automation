@@ -66,7 +66,8 @@ interface PayrollEntry {
           <table class="table table-bordered table-hover mb-0 align-middle text-center">
             <thead class="bg-dark text-white">
               <tr>
-                <th class="py-3 px-4 text-start" style="position: sticky; left: 0; z-index: 10; background: #212529; min-width: 200px;">Employee</th>
+                <th class="py-3 px-2 text-center" style="position: sticky; left: 0; z-index: 10; background: #212529; min-width: 40px;">Sl</th>
+                <th class="py-3 px-4 text-start" style="position: sticky; left: 40px; z-index: 10; background: #212529; min-width: 200px;">Employee</th>
                 <!-- Days 1-31 -->
                 <th *ngFor="let d of days" class="p-1" 
                     style="min-width: 35px; cursor: pointer;" 
@@ -85,12 +86,14 @@ interface PayrollEntry {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of entries" [class.table-secondary]="period?.status === 'CLOSED'">
+              <tr *ngFor="let row of entries; let i = index" [class.table-secondary]="period?.status === 'CLOSED'">
                 
+                <!-- Sl.No -->
+                <td class="text-center fw-bold bg-white" style="position: sticky; left: 0; z-index: 5;">{{ i + 1 }}</td>
+
                 <!-- Employee Info -->
-                <td class="text-start px-3 bg-white" style="position: sticky; left: 0; z-index: 5;">
+                <td class="text-start px-3 bg-white" style="position: sticky; left: 40px; z-index: 5;">
                     <div class="fw-bold text-dark">{{ row.employee.fullName }}</div>
-                    <div class="small text-muted font-monospace">{{ row.employee.memberId }}</div>
                 </td>
                 
                 <!-- Checkboxes -->
@@ -119,7 +122,7 @@ interface PayrollEntry {
               </tr>
               
               <tr *ngIf="entries.length === 0">
-                 <td [attr.colspan]="days.length + 2" class="text-center py-5">
+                 <td [attr.colspan]="days.length + 3" class="text-center py-5">
                     <div class="text-muted">Loading or No Casual Labourers Found...</div>
                  </td>
               </tr>
@@ -185,6 +188,14 @@ export class CasualAttendanceComponent implements OnInit {
         // If not, I'll display all for now, but strictly User wants Casual.
         // Let's assume Employee object has category.
         this.entries = data.filter(e => e.employee.category === 'CL');
+        // Sort by memberId for consistent ordering
+        this.entries.sort((a, b) => {
+          try {
+            return parseInt(a.employee.memberId) - parseInt(b.employee.memberId);
+          } catch {
+            return a.employee.memberId.localeCompare(b.employee.memberId);
+          }
+        });
         // Initialize activeDays if null
         this.entries.forEach(e => {
           if (!e.activeDays) e.activeDays = [];

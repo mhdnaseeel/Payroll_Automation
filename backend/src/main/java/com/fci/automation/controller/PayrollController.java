@@ -165,7 +165,7 @@ public class PayrollController {
             entries = employees.stream()
                     .filter(emp -> {
                         if (emp.getInactiveDate() == null)
-                            return true; // Always include if no date set
+                            return true; // Always include if no inactive date set
                         // Include if inactiveDate is ON or AFTER periodStart
                         return !emp.getInactiveDate().isBefore(periodStart);
                     })
@@ -177,6 +177,22 @@ public class PayrollController {
                     }).collect(Collectors.toList());
             entryRepository.saveAll(entries);
         }
+        // Filter out employees who became inactive BEFORE this period
+        PayrollPeriod filterPeriod = periodRepository.findById(periodId).orElseThrow();
+        java.time.LocalDate filterPeriodStart = java.time.LocalDate.of(filterPeriod.getYear(), filterPeriod.getMonth(),
+                1);
+
+        entries = entries.stream()
+                .filter(entry -> {
+                    Employee emp = entry.getEmployee();
+                    // If inactiveDate is set and is BEFORE the period start, exclude
+                    if (emp.getInactiveDate() != null && emp.getInactiveDate().isBefore(filterPeriodStart)) {
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+
         // Sort entries by Member ID for consistent display
         entries.sort((e1, e2) -> {
             try {
