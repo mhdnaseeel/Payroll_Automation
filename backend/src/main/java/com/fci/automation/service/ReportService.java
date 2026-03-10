@@ -280,6 +280,11 @@ public class ReportService {
             Sheet sheet = workbook.getSheetAt(0);
             List<PayrollEntry> entries = entryRepository.findByPeriodId(periodId);
 
+            // ESI Instruction #10: All columns must be in 'Text' format
+            CellStyle textStyle = workbook.createCellStyle();
+            DataFormat dataFormat = workbook.createDataFormat();
+            textStyle.setDataFormat(dataFormat.getFormat("@"));
+
             // Date Format for Col 5
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -291,47 +296,61 @@ public class ReportService {
                 }
                 rowIdx++;
 
-                // Col 0: IP Number
-                row.createCell(0).setCellValue(entry.getEmployee().getIpNumber());
+                // Col 0: IP Number (Numeric data, Text format)
+                Cell cell0 = row.createCell(0);
+                cell0.setCellStyle(textStyle);
+                try {
+                    cell0.setCellValue(Double.parseDouble(entry.getEmployee().getIpNumber()));
+                } catch (NumberFormatException e) {
+                    cell0.setCellValue(entry.getEmployee().getIpNumber());
+                }
 
-                // Col 1: IP Name
-                row.createCell(1).setCellValue(entry.getEmployee().getFullName());
+                // Col 1: IP Name (Text)
+                Cell cell1 = row.createCell(1);
+                cell1.setCellStyle(textStyle);
+                cell1.setCellValue(entry.getEmployee().getFullName());
 
-                // Col 2: Days Worked
+                // Col 2: Days Worked (Numeric data, Text format)
                 int days = entry.getDaysWorked() != null ? entry.getDaysWorked() : 0;
-                row.createCell(2).setCellValue(days);
+                Cell cell2 = row.createCell(2);
+                cell2.setCellStyle(textStyle);
+                cell2.setCellValue((double) days);
 
-                // Col 3: Total Monthly Wages (Logic: CL = Days*541, HL = Input)
+                // Col 3: Total Monthly Wages (Numeric data, Text format)
                 BigDecimal wages;
                 if (entry.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL) {
                     wages = new BigDecimal(days).multiply(new BigDecimal("541"));
                 } else {
                     wages = entry.getWagesEarned() != null ? entry.getWagesEarned() : BigDecimal.ZERO;
                 }
-                row.createCell(3).setCellValue(wages.doubleValue());
+                Cell cell3 = row.createCell(3);
+                cell3.setCellStyle(textStyle);
+                cell3.setCellValue(wages.doubleValue());
 
-                // Col 4: Reason Code per ESI Instructions & Reason Codes
+                // Col 4: Reason Code (Numeric data, Text format)
                 // Col 5: Last Working Day (only when days=0 and reason requires it)
                 String reasonCode;
                 String lastDay = "";
 
                 if (days > 0) {
-                    // Employee worked — Reason Code = 0, no last working day
                     reasonCode = "0";
                 } else {
-                    // Zero working days — determine reason
                     if (entry.getEmployee().getStatus() == com.fci.automation.entity.Employee.Status.INACTIVE
                             && entry.getEmployee().getInactiveDate() != null) {
-                        // Left Service (Code 2) — provide last working day
                         reasonCode = "2";
                         lastDay = entry.getEmployee().getInactiveDate().format(formatter);
                     } else {
-                        // On Leave (Code 1) — no last working day
                         reasonCode = "1";
                     }
                 }
-                row.createCell(4).setCellValue(reasonCode);
-                row.createCell(5).setCellValue(lastDay);
+                Cell cell4 = row.createCell(4);
+                cell4.setCellStyle(textStyle);
+                cell4.setCellValue(Double.parseDouble(reasonCode));
+                if (lastDay != null && !lastDay.isEmpty()) {
+                    Cell cell5 = row.createCell(5);
+                    cell5.setCellStyle(textStyle);
+                    cell5.setCellValue(lastDay);
+                }
             }
 
             workbook.write(out);
