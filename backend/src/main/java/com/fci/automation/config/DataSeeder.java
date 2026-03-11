@@ -39,6 +39,12 @@ public class DataSeeder implements CommandLineRunner {
     @Value("${app.bill.password}")
     private String billPassword;
 
+    @Value("${app.salary.username}")
+    private String salaryUsername;
+
+    @Value("${app.salary.password}")
+    private String salaryPassword;
+
     @Autowired
     org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
@@ -108,6 +114,7 @@ public class DataSeeder implements CommandLineRunner {
         seedUser(adminUsername, adminPassword, User.Role.ADMIN);
         seedUser(userUsername, userPassword, User.Role.USER);
         seedUser(billUsername, billPassword, User.Role.BILL);
+        seedUser(salaryUsername, salaryPassword, User.Role.SALARY);
     }
 
     private void seedUser(String username, String password, User.Role role) {
@@ -148,6 +155,7 @@ public class DataSeeder implements CommandLineRunner {
         createTestUser("testadmin", User.Role.ADMIN);
         createTestUser("testuser", User.Role.USER);
         createTestUser("testbill", User.Role.BILL);
+        createTestUser("testsalary", User.Role.SALARY);
     }
 
     private void createTestUser(String username, User.Role role) {

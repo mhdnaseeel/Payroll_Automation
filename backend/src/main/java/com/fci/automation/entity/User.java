@@ -31,6 +31,6 @@ public class User {
     private Role role;
 
     public enum Role {
-        ADMIN, USER, BILL
+        ADMIN, USER, BILL, SALARY
     }
 }

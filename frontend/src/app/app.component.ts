@@ -43,6 +43,12 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
                     <i class="bi bi-people me-2"></i> Employees
                 </a>
             </li>
+            <li class="nav-item" *ngIf="role === 'ADMIN'">
+                <a routerLink="/salary" class="nav-link text-white btn text-start border-0 mt-2" 
+                   (click)="toggleSidebar()">
+                    <i class="bi bi-calculator me-2"></i> Salary Calculator
+                </a>
+            </li>
 
             <!-- User Links (Payroll & Reports) -->
             <ng-container *ngIf="role === 'USER'">
@@ -109,6 +115,16 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
                     <a routerLink="/billing" [queryParams]="{module: 'BILL'}" class="nav-link text-white btn text-start border-0 mt-2 w-100"
                        (click)="toggleSidebar()">
                         <i class="bi bi-file-pdf me-2"></i> Bill Generator
+                    </a>
+                </li>
+            </ng-container>
+
+            <!-- Salary Links (For SALARY Role) -->
+            <ng-container *ngIf="role === 'SALARY'">
+                <li class="nav-item">
+                    <a routerLink="/salary" class="nav-link text-white btn text-start border-0 fw-bold"
+                       (click)="toggleSidebar()">
+                        <i class="bi bi-calculator me-2"></i> Salary Calculator
                     </a>
                 </li>
             </ng-container>

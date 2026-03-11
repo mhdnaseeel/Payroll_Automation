@@ -19,6 +19,12 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] }
     },
     {
+        path: 'salary',
+        loadComponent: () => import('./payroll/salary.component').then(m => m.SalaryComponent),
+        canActivate: [authGuard],
+        data: { roles: ['ADMIN', 'USER', 'SALARY'] }
+    },
+    {
         path: 'upload',
         loadComponent: () => import('./upload/upload.component').then(m => m.UploadComponent),
         canActivate: [authGuard],

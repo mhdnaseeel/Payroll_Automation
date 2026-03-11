@@ -16,11 +16,12 @@ export const authGuard: CanActivateFn = (route, state) => {
                 return true;
             } else {
                 // Unauthorized role access
-                // Redirect to their own dashboard
                 if (userRole === 'ADMIN') {
                     return router.parseUrl('/admin/employees');
                 } else if (userRole === 'BILL') {
                     return router.parseUrl('/billing');
+                } else if (userRole === 'SALARY') {
+                    return router.parseUrl('/salary');
                 } else {
                     return router.parseUrl('/user/home');
                 }

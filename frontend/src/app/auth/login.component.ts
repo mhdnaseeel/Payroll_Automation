@@ -66,6 +66,8 @@ export class LoginComponent {
       this.router.navigate(['/user/home'], { replaceUrl: true });
     } else if (role === 'BILL') {
       this.router.navigate(['/billing'], { replaceUrl: true });
+    } else if (role === 'SALARY') {
+      this.router.navigate(['/salary'], { replaceUrl: true });
     }
   }
 
@@ -76,6 +78,8 @@ export class LoginComponent {
           this.router.navigate(['/admin/employees']);
         } else if (res.role === 'BILL') {
           this.router.navigate(['/billing']);
+        } else if (res.role === 'SALARY') {
+          this.router.navigate(['/salary']);
         } else {
           // Find active period logic would be better, for now redirect to dashboard or payroll
           this.router.navigate(['/user/home']);
