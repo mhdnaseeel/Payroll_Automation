@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    apiUrl: '/api'
+    apiUrl: 'https://mhdnaseel521-payroll-automation-backend.hf.space/api'
 };
