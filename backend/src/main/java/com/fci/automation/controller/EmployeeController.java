@@ -67,6 +67,8 @@ public class EmployeeController {
 
             org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
             java.util.List<Employee> employees = new java.util.ArrayList<>();
+            // Track already-parsed employees by memberId to handle duplicates within the same file
+            java.util.Map<String, Employee> parsedEmployees = new java.util.LinkedHashMap<>();
 
             // 1. Parse Header Row (Row 0)
             org.apache.poi.ss.usermodel.Row headerRow = sheet.getRow(0);
@@ -103,9 +105,14 @@ public class EmployeeController {
                 if (memberId == null || memberId.trim().isEmpty())
                     continue;
 
-                // Upsert Logic
-                Employee emp = employeeRepository.findByMemberId(memberId)
-                        .orElse(new Employee());
+                // Upsert Logic: check in-memory map first, then database
+                Employee emp;
+                if (parsedEmployees.containsKey(memberId)) {
+                    emp = parsedEmployees.get(memberId);
+                } else {
+                    emp = employeeRepository.findByMemberId(memberId)
+                            .orElse(new Employee());
+                }
 
                 if (emp.getId() == null) {
                     emp.setMemberId(memberId);
@@ -177,10 +184,10 @@ public class EmployeeController {
                         emp.setCategory(Employee.Category.CL);
                 }
 
-                employees.add(emp);
+                parsedEmployees.put(memberId, emp);
             }
 
-            return employeeRepository.saveAll(employees);
+            return employeeRepository.saveAll(new java.util.ArrayList<>(parsedEmployees.values()));
 
         } catch (Exception e) {
             e.printStackTrace();

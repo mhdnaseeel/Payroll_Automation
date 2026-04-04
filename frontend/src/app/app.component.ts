@@ -43,12 +43,6 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
                     <i class="bi bi-people me-2"></i> Employees
                 </a>
             </li>
-            <li class="nav-item" *ngIf="role === 'ADMIN'">
-                <a routerLink="/salary" class="nav-link text-white btn text-start border-0 mt-2" 
-                   (click)="toggleSidebar()">
-                    <i class="bi bi-calculator me-2"></i> Salary Calculator
-                </a>
-            </li>
 
             <!-- User Links (Payroll & Reports) -->
             <ng-container *ngIf="role === 'USER'">
