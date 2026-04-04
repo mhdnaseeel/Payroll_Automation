@@ -5,6 +5,7 @@ build/
 bin/
 out/
 target/
+uploads/
 *.class
 *.log
 .idea
