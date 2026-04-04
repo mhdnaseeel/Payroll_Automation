@@ -17,5 +17,5 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
+EXPOSE 7860
 ENTRYPOINT ["java", "-jar", "app.jar"]
