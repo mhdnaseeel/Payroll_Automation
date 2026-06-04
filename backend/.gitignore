@@ -10,3 +10,8 @@ uploads/
 *.log
 .idea
 *.iml
+
+# HF Utility Scripts (ignore to prevent token leaks)
+check_logs.py
+update_hf.py
+update_secrets.py
