@@ -83,6 +83,36 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    public void resetAndSeedDatabase(com.fci.automation.config.RealmEnum realm) throws Exception {
+        logger.info("RESET_DB: Starting reset for realm: {}", realm);
+
+        // 1. Drop all tables in the current connection schema
+        jdbcTemplate.execute("DROP TABLE IF EXISTS payroll_entry_days CASCADE");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS payroll_entries CASCADE");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS payroll_periods CASCADE");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS employees CASCADE");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS refresh_tokens CASCADE");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS users CASCADE");
+
+        // 2. Recreate tables from db-init.sql
+        org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:db-init.sql");
+        String sql = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        String[] statements = sql.split(";");
+        for (String stmt : statements) {
+            if (!stmt.trim().isEmpty()) {
+                jdbcTemplate.execute(stmt);
+            }
+        }
+
+        // 3. Re-seed default users
+        if (realm == com.fci.automation.config.RealmEnum.TEST) {
+            seedTestRealm();
+        } else {
+            seedRealRealm();
+        }
+        logger.info("RESET_DB: Reset and seed completed for realm: {}", realm);
+    }
+
     private void initializeTestSchema() {
         try {
             logger.info("SEEDER [TEST]: Initializing Schema Tables from db-init.sql...");

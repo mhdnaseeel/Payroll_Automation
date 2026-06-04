@@ -223,4 +223,23 @@ public class EmployeeController {
     public void deleteEmployee(@PathVariable UUID id) {
         employeeRepository.deleteById(id);
     }
+
+    @Autowired
+    private com.fci.automation.config.DataSeeder dataSeeder;
+
+    @PostMapping("/reset-db")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ADMIN')")
+    public java.util.Map<String, String> resetDatabase() {
+        try {
+            com.fci.automation.config.RealmEnum realm = com.fci.automation.config.RealmContext.getRealm();
+            if (realm == null) {
+                return java.util.Map.of("status", "error", "message", "Realm context is missing.");
+            }
+            dataSeeder.resetAndSeedDatabase(realm);
+            return java.util.Map.of("status", "success", "message", "Database reset and seeded successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return java.util.Map.of("status", "error", "message", e.getMessage());
+        }
+    }
 }

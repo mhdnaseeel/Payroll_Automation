@@ -31,6 +31,7 @@ services:
       SPRING_DATASOURCE_TEST_JDBC_URL: jdbc:postgresql://postgres:5432/hr_db
       SPRING_DATASOURCE_TEST_USERNAME: postgres
       SPRING_DATASOURCE_TEST_PASSWORD: password
+      PORT: 8080
 
       # AI Configuration
       MISTRAL_API_KEY: "o8VSOgUc8A4W1oN0DSx1b5l4QqflnwB2" # Key configured
