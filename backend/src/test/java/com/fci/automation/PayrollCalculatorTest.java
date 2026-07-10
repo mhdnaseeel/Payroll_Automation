@@ -23,20 +23,20 @@ public class PayrollCalculatorTest {
 
         calculator.calculate(entry);
 
-        // Verify Wages = 10 * 541 = 5410
-        Assertions.assertEquals(new BigDecimal("5410"), entry.getWagesEarned(), "Wages Mismatch for CL");
+        // Verify Wages = 10 * 556 = 5560
+        Assertions.assertEquals(new BigDecimal("5560"), entry.getWagesEarned(), "Wages Mismatch for CL");
 
         // Verify Deductions (Calculated & Stored for Report)
-        Assertions.assertEquals(new BigDecimal("649"), entry.getEpfMemberShare(), "EPF Member should be 649");
-        Assertions.assertEquals(new BigDecimal("41"), entry.getEsiMemberShare(), "ESI Member should be 41");
+        Assertions.assertEquals(new BigDecimal("667"), entry.getEpfMemberShare(), "EPF Member should be 667");
+        Assertions.assertEquals(new BigDecimal("42"), entry.getEsiMemberShare(), "ESI Member should be 42");
 
         // Verify Contractor Shares
-        Assertions.assertEquals(new BigDecimal("649"), entry.getEpfContractorShare(), "EPF Contractor Share Mismatch");
-        Assertions.assertEquals(new BigDecimal("176"), entry.getEsiContractorShare(), "ESI Contractor Share Mismatch");
+        Assertions.assertEquals(new BigDecimal("667"), entry.getEpfContractorShare(), "EPF Contractor Share Mismatch");
+        Assertions.assertEquals(new BigDecimal("181"), entry.getEsiContractorShare(), "ESI Contractor Share Mismatch");
 
         // Verify Net Pay = Wages (Entry Screen Logic - User Request)
         // Deductions are verified above, but Net Pay here ignores them.
-        Assertions.assertEquals(new BigDecimal("5410"), entry.getNetPayable(), "Net Pay Mismatch for CL");
+        Assertions.assertEquals(new BigDecimal("5560"), entry.getNetPayable(), "Net Pay Mismatch for CL");
     }
 
     @Test
@@ -89,10 +89,10 @@ public class PayrollCalculatorTest {
         Assertions.assertEquals(new BigDecimal("9999"), entry.getWagesEarned(),
                 "Wages should be preserved (User Input)");
 
-        // DEMO RESULT 2: Tax Calculated on STANDARD Wages (10 * 541 = 5410)
-        // EPF Member: 12% of 5410 = 649
-        Assertions.assertEquals(new BigDecimal("649"), entry.getEpfMemberShare(),
-                "Tax should be based on Standard Wages (5410)");
+        // DEMO RESULT 2: Tax Calculated on STANDARD Wages (10 * 556 = 5560)
+        // EPF Member: 12% of 5560 = 667
+        Assertions.assertEquals(new BigDecimal("667"), entry.getEpfMemberShare(),
+                "Tax should be based on Standard Wages (5560)");
 
         // DEMO RESULT 3: Net Pay ignores deductions (Entry View) and matches Input
         Assertions.assertEquals(new BigDecimal("9999"), entry.getNetPayable(),

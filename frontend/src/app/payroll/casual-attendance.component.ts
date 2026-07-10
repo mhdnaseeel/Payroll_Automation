@@ -280,22 +280,34 @@ export class CasualAttendanceComponent implements OnInit {
       });
   }
 
+  saveData() {
+    return this.http.put<PayrollEntry[]>(`${environment.apiUrl}/payroll/entries`, this.entries);
+  }
+
   lock() {
-    this.dialogService.confirm('Lock Period', 'Are you sure you want to Lock this period? No further edits will be allowed until unlocked.')
+    this.dialogService.confirm('Lock Period', 'Are you sure you want to Lock this period? This will SAVE current attendance data and LOCK the period. No further edits will be allowed until unlocked.')
       .subscribe(confirmed => {
         if (!confirmed) return;
 
         this.isLoading = true;
-        this.payrollService.finalizePeriod(this.periodId).subscribe({
+        this.saveData().subscribe({
           next: (updated) => {
-            this.period = updated;
-            this.isLoading = false;
-            this.dialogService.alert('Success', 'Period Locked Successfully!');
-            this.loadData();
+            this.payrollService.finalizePeriod(this.periodId).subscribe({
+              next: (updatedPeriod) => {
+                this.period = updatedPeriod;
+                this.isLoading = false;
+                this.dialogService.alert('Success', 'Attendance Saved & Period Locked Successfully!');
+                this.loadData();
+              },
+              error: (err) => {
+                this.isLoading = false;
+                this.dialogService.alert('Error', 'Saved, but failed to lock: ' + err.message);
+              }
+            });
           },
           error: (err) => {
             this.isLoading = false;
-            this.dialogService.alert('Error', 'Failed to lock: ' + err.message);
+            this.dialogService.alert('Error', 'Cannot Lock: Failed to save attendance. ' + err.message);
           }
         });
       });
@@ -303,14 +315,7 @@ export class CasualAttendanceComponent implements OnInit {
 
   save() {
     this.isLoading = true;
-    // Map entries back to payload
-    // We only need to send ID and activeDays really, OR full object if PUT expects it.
-    // Existing PUT /api/payroll/entries expects List<PayrollEntry>.
-    // It should handle activeDays if I updated the Entity (which handles JSON serialization usually).
-    // I need to make sure backend DTO/Entity serialization includes activeDays. 
-    // @ElementCollection usually serializes to valid JSON array.
-
-    this.http.put<PayrollEntry[]>(`${environment.apiUrl}/payroll/entries`, this.entries).subscribe({
+    this.saveData().subscribe({
       next: (updated) => {
         this.isLoading = false;
         this.dialogService.alert('Success', 'Attendance Saved Successfully!');

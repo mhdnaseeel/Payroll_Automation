@@ -156,8 +156,8 @@ public class ReportService {
                     BigDecimal displayWages = entry.getWagesEarned();
                     if (entry.getEmployee() != null
                             && entry.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL) {
-                        // Strict Rule for Report: Days * 541
-                        displayWages = new BigDecimal(days).multiply(new BigDecimal("541"));
+                        // Strict Rule for Report: Days * 556
+                        displayWages = new BigDecimal(days).multiply(new BigDecimal("556"));
                     }
 
                     // Wages (H)
@@ -319,7 +319,7 @@ public class ReportService {
                 // Col 3: Total Monthly Wages (Numeric data, Text format)
                 BigDecimal wages;
                 if (entry.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL) {
-                    wages = new BigDecimal(days).multiply(new BigDecimal("541"));
+                    wages = new BigDecimal(days).multiply(new BigDecimal("556"));
                 } else {
                     wages = entry.getWagesEarned() != null ? entry.getWagesEarned() : BigDecimal.ZERO;
                 }
@@ -373,7 +373,7 @@ public class ReportService {
             int days = entry.getDaysWorked() != null ? entry.getDaysWorked() : 0;
 
             if (entry.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL) {
-                grossWages = new BigDecimal(days).multiply(new BigDecimal("541"));
+                grossWages = new BigDecimal(days).multiply(new BigDecimal("556"));
             } else {
                 grossWages = entry.getWagesEarned() != null ? entry.getWagesEarned() : BigDecimal.ZERO;
             }
@@ -411,11 +411,11 @@ public class ReportService {
             if (ncpDays < 0)
                 ncpDays = 0;
 
-            // Special Case: Employee SHAJI.M.G (UAN: 102194618333)
+            // Special Case: SHAJI.M.G (UAN: 102194618333), JOHNSON THOMAS (UAN: 100901938191) & KUNJU MUHAMMED K K (UAN: 100902803419)
             String uan = entry.getEmployee().getUanNumber() != null ? entry.getEmployee().getUanNumber().trim() : "";
             BigDecimal diff;
 
-            if ("102194618333".equals(uan)) {
+            if ("102194618333".equals(uan) || "100901938191".equals(uan) || "100902803419".equals(uan)) {
                 // Rule 1: EPS WAGES = 0
                 epsWages = BigDecimal.ZERO;
 
@@ -816,8 +816,8 @@ public class ReportService {
 
             for (PayrollEntry entry : activeEntries) {
                 addCell(table1, entry.getEmployee().getFullName(), dataFont);
-                // Fixed Rate 541
-                BigDecimal dailyRate = new BigDecimal("541");
+                // Fixed Rate 556
+                BigDecimal dailyRate = new BigDecimal("556");
 
                 for (int i = 1; i <= 15; i++) {
                     if (entry.getActiveDays().contains(i)) {
@@ -866,8 +866,8 @@ public class ReportService {
 
             for (PayrollEntry entry : activeEntries) {
                 addCell(table2, entry.getEmployee().getFullName(), dataFont);
-                // Fixed Rate 541 as per requirements
-                BigDecimal dailyRate = new BigDecimal("541");
+                // Fixed Rate 556 as per requirements
+                BigDecimal dailyRate = new BigDecimal("556");
 
                 // Active Days Grid
                 for (int i = 16; i <= 31; i++) {
@@ -885,7 +885,7 @@ public class ReportService {
                 // Days Worked
                 addCell(table2, String.valueOf(entry.getDaysWorked()), headFont);
 
-                // Total Salary = 541 * Days
+                // Total Salary = 556 * Days
                 BigDecimal totalSalary = dailyRate.multiply(BigDecimal.valueOf(entry.getDaysWorked()));
                 addCell(table2, String.valueOf(totalSalary), headFont);
 

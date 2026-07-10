@@ -51,7 +51,7 @@ public class EsiGenerationTest {
                 when(periodRepository.findById(periodId)).thenReturn(Optional.of(period));
 
                 // 1. Casual Labour Entry (Days=10, Input=9999 [Incorrect], Logic should use
-                // 10*541=5410)
+                // 10*556=5560)
                 PayrollEntry clEntry = new PayrollEntry();
                 Employee clEmp = new Employee();
                 clEmp.setCategory(Employee.Category.CL);
@@ -112,8 +112,8 @@ public class EsiGenerationTest {
                         Row r1 = sheet.getRow(1);
                         Assertions.assertEquals("Casual Worker", r1.getCell(1).getStringCellValue());
                         Assertions.assertEquals(10.0, r1.getCell(2).getNumericCellValue());
-                        Assertions.assertEquals(5410.0, r1.getCell(3).getNumericCellValue(),
-                                        "CL Wages should be Days*541");
+                        Assertions.assertEquals(5560.0, r1.getCell(3).getNumericCellValue(),
+                                        "CL Wages should be Days*556");
                         Assertions.assertEquals(0.0, r1.getCell(4).getNumericCellValue(),
                                         "Reason Code should be 0 for days > 0");
                         Assertions.assertNull(r1.getCell(5), "Last Working Day cell should be empty when days > 0");

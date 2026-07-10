@@ -30,10 +30,10 @@ public class EpfGenerationTest {
     public void testGenerateEpfTxt_LogicVerification() {
         UUID periodId = UUID.randomUUID();
 
-        // 1. Casual Labour (Days 10, Gross = 5410)
-        // EPF (12%) = 649
-        // EPS (8.33%) = 451
-        // Diff = 649 - 451 = 198
+        // 1. Casual Labour (Days 10, Gross = 5560)
+        // EPF (12%) = 667
+        // EPS (8.33%) = 463
+        // Diff = 667 - 463 = 204
         // NCP = 20
         PayrollEntry clEntry = createEntry(Employee.Category.CL, 10, new BigDecimal("0"));
         clEntry.getEmployee().setUanNumber("CL_UAN");
@@ -58,14 +58,14 @@ public class EpfGenerationTest {
         Assertions.assertEquals(2, lines.length);
 
         // Verify CL Line
-        // CL_UAN#~#Name#~#5410#~#5410#~#5410#~#5410#~#649#~#451#~#198#~#20#~#0
+        // CL_UAN#~#Name#~#5560#~#5560#~#5560#~#5560#~#667#~#463#~#204#~#20#~#0
         String[] clParts = lines[0].split("#~#");
         Assertions.assertEquals("CL_UAN", clParts[0]);
-        Assertions.assertEquals("5410", clParts[2], "Gross");
-        Assertions.assertEquals("5410", clParts[3], "EPF Wages");
-        Assertions.assertEquals("649", clParts[6], "EPF Contri");
-        Assertions.assertEquals("451", clParts[7], "EPS Contri");
-        Assertions.assertEquals("198", clParts[8], "Diff");
+        Assertions.assertEquals("5560", clParts[2], "Gross");
+        Assertions.assertEquals("5560", clParts[3], "EPF Wages");
+        Assertions.assertEquals("667", clParts[6], "EPF Contri");
+        Assertions.assertEquals("463", clParts[7], "EPS Contri");
+        Assertions.assertEquals("204", clParts[8], "Diff");
         Assertions.assertEquals("20", clParts[9], "NCP");
 
         // Verify High Earner Line

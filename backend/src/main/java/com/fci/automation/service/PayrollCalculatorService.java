@@ -29,9 +29,9 @@ public class PayrollCalculatorService {
         if (entry.getEmployee() != null
                 && entry.getEmployee().getCategory() == com.fci.automation.entity.Employee.Category.CL) {
             // Casual Labour:
-            // Standard (Tax Base) = Days * 541
+            // Standard (Tax Base) = Days * 556
             int days = entry.getDaysWorked() != null ? entry.getDaysWorked() : 0;
-            BigDecimal standardWages = new BigDecimal(days).multiply(new BigDecimal("541"));
+            BigDecimal standardWages = new BigDecimal(days).multiply(new BigDecimal("556"));
 
             taxBaseWages = standardWages;
 
@@ -65,7 +65,7 @@ public class PayrollCalculatorService {
         entry.setEsiContractorShare(esiContractor);
 
         // 4. Bonus (Standard 8.33% on Tax Base?)
-        // Start Step 2 says: "Wages Earned = 'Master Data'!G5 * 541" for CL.
+        // Start Step 2 says: "Wages Earned = 'Master Data'!G5 * 556" for CL.
         // It implies EVERYTHING is based on that.
         BigDecimal bonus = taxBaseWages.multiply(BONUS_RATE).setScale(0, RoundingMode.HALF_UP);
         entry.setBonusShare(bonus);
