@@ -1,11 +1,13 @@
 # Build stage
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+
+# Copy pom.xml to download dependencies with mount caching
 COPY pom.xml .
-# Download dependencies first (Cached as long as pom.xml doesn't change)
-RUN mvn dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B || true
+
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:17-jdk-jammy

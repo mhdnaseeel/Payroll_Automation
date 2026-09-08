@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import java.math.BigDecimal;
 import java.time.Month;
 
@@ -458,33 +461,54 @@ public class ReportService {
         return txt.toString();
     }
 
+    public Map<String, Object> getBankSummary(UUID periodId) {
+        List<PayrollEntry> entries = entryRepository.findByPeriodId(periodId);
+        int sameBankCount = 0;
+        BigDecimal sameBankAmount = BigDecimal.ZERO;
+        int otherBankCount = 0;
+        BigDecimal otherBankAmount = BigDecimal.ZERO;
+
+        for (PayrollEntry entry : entries) {
+            String acct = entry.getEmployee().getBankAccountNo();
+            if (acct == null || acct.trim().isEmpty())
+                continue;
+            BigDecimal net = entry.getNetPayable();
+            if (net == null || net.compareTo(BigDecimal.ZERO) <= 0)
+                continue;
+
+            BigDecimal roundedAmt = net.setScale(0, java.math.RoundingMode.HALF_UP);
+            String ifsc = entry.getEmployee().getIfscCode();
+            if (ifsc != null && ifsc.trim().toUpperCase().startsWith("SBIN")) {
+                sameBankCount++;
+                sameBankAmount = sameBankAmount.add(roundedAmt);
+            } else {
+                otherBankCount++;
+                otherBankAmount = otherBankAmount.add(roundedAmt);
+            }
+        }
+
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("sameBankCount", sameBankCount);
+        summary.put("sameBankAmount", sameBankAmount);
+        summary.put("otherBankCount", otherBankCount);
+        summary.put("otherBankAmount", otherBankAmount);
+        summary.put("totalCount", sameBankCount + otherBankCount);
+        summary.put("totalAmount", sameBankAmount.add(otherBankAmount));
+        return summary;
+    }
+
     public String generateBulkTxt(UUID periodId, java.time.LocalDate paymentDate) {
+        return generateBulkTxt(periodId, paymentDate, "ALL");
+    }
+
+    public String generateBulkTxt(UUID periodId, java.time.LocalDate paymentDate, String paymentType) {
         StringBuilder txt = new StringBuilder();
         PayrollPeriod period = periodRepository.findById(periodId).orElseThrow();
         List<PayrollEntry> entries = entryRepository.findByPeriodId(periodId);
 
-        // 0. Calculate Total Debit (Total Net Wages)
-        // Only include positive amounts? Usually yes, NetPayable >= 0.
-        BigDecimal totalDebit = entries.stream()
-                .map(e -> e.getNetPayable())
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        String type = (paymentType != null && !paymentType.isBlank()) ? paymentType.trim().toUpperCase() : "ALL";
 
-        // 0. Format Date (DD/MM/YYYY)
-        String dateStr = paymentDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
-        // 1. Header Row (Fixed)
-        // 44145351821#17242#<DATE>#<TOTAL_DEBIT>###NASAR PK#NEFT
-        txt.append("44145351821#17242#");
-        txt.append(dateStr).append("#"); // Date
-        txt.append(totalDebit.longValue()).append("###"); // Total Debit + 2 separators
-        txt.append("NASAR PK#NEFT\n");
-
-        // 2. Employee Rows
-        // <ACCOUNT>#<IFSC>#<DATE>##<NET>##NASAR PK#NEFT
-
-        // Sort by Member ID? Or as is. Usually sorted.
-        // Let's sort for consistency.
+        // Sort by Member ID for consistency
         entries.sort((e1, e2) -> {
             try {
                 return Integer.compare(Integer.parseInt(e1.getEmployee().getMemberId()),
@@ -494,69 +518,68 @@ public class ReportService {
             }
         });
 
+        List<PayrollEntry> targetEntries = new ArrayList<>();
         for (PayrollEntry entry : entries) {
             String acct = entry.getEmployee().getBankAccountNo();
             if (acct == null || acct.trim().isEmpty())
-                continue; // Skip if no account? Or throw? Prompt says "Prevent generation if Account
-                          // number is missing" (Point 8).
-            // But Point 8 says "System Responsibilities... Prevent generation".
-            // Implementation: I'll skip valid rows? No, better throw exception to alert
-            // user.
-            // "Prevent generation if ... Account number is missing".
-            // So if ANY missing, FAIL.
+                continue;
 
-            // Check Net Pay
             BigDecimal net = entry.getNetPayable();
-            if (net == null || net.compareTo(BigDecimal.ZERO) == 0)
-                continue; // Skip 0 pay? Prompt says "Net pay mismatch exists".
-            // "Net pay mismatch" usually means Calc diff.
-            // I'll assume standard Net Pay is correct.
+            if (net == null || net.compareTo(BigDecimal.ZERO) <= 0)
+                continue;
 
-            // IFSC
-            // "IFSC Code Same for all employees" (Point 5).
-            // Point 5 Data Mapping: "IFSC Code Same for all employees".
-            // Example Row 2: `...#CBIN0280965#...`.
-            // Does every employee used same IFSC? Usually YES if bulk payment is within
-            // same bank branch OR if "Same for all" means hardcoded.
-            // Example Row 2,3,4 ALL have `CBIN0280965`.
-            // BUT Employee might have different IFSC in DB.
-            // User says "IFSC Code Same for all employees".
-            // Does this mean "Use the single IFSC provided in example"?
-            // Or "All employees happen to have same".
-            // Given "Fixed Bank" section, and "Same for all employees", I will use
-            // `CBIN0280965` HARDCODED as per example.
-            // ALERT: If employees have different banks, this will fail.
-            // BUT user said "Same for all employees".
-
-            // Let's re-read carefully: "IFSC Code Same for all employees".
-            // AND the example shows `CBIN0280965`.
-            // AND Header Sender IFSC is `17242`.
-            // Sender is likely FCI internal account.
-            // Receivers (Employees) might be same bank?
-            // "System Responsibilities... Correctly map account number ↔ net pay".
-            // If I hardcode IFSC, and an employee is in SBI, the payment fails.
-            // Does `entries` have IFSC? `Employee` entity has `ifscCode`.
-            // I should probably use `entry.getEmployee().getIfscCode()`?
-            // "Same for all employees" might be a description of the *Example* scenario,
-            // NOT a rule.
-            // OR it means "Use the Sender IFSC"? No, Sender is 17242.
-            // I will use `entry.getEmployee().getIfscCode()` if present. If "Same for all"
-            // refers to "Use the Employee's IFSC field", that's normal.
-            // If it means "Ignore Employee IFSC and use X", that's dangerous.
-            // I will use Employee IFSC.
             String empIfsc = entry.getEmployee().getIfscCode();
-            if (empIfsc == null || empIfsc.isBlank())
-                empIfsc = "CBIN0280965"; // Fallback to example?
+            boolean isSameBank = (empIfsc != null && empIfsc.trim().toUpperCase().startsWith("SBIN"));
+
+            if ("SAME_BANK".equals(type) && !isSameBank) {
+                continue;
+            }
+            if ("OTHER_BANK".equals(type) && isSameBank) {
+                continue;
+            }
+            targetEntries.add(entry);
+        }
+
+        // Calculate Total Debit for target entries
+        BigDecimal totalDebit = targetEntries.stream()
+                .map(e -> e.getNetPayable().setScale(0, java.math.RoundingMode.HALF_UP))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Format Date (DD/MM/YYYY)
+        String dateStr = paymentDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        String headerMode = "NEFT";
+        if ("SAME_BANK".equals(type)) {
+            headerMode = "ST";
+        }
+
+        // 1. Header Row
+        // 44145351821#17242#<DATE>#<TOTAL_DEBIT>###NASAR PK#<MODE>
+        txt.append("44145351821#17242#");
+        txt.append(dateStr).append("#");
+        txt.append(totalDebit.longValue()).append("###");
+        txt.append("NASAR PK#").append(headerMode).append("\n");
+
+        // 2. Employee Rows
+        for (PayrollEntry entry : targetEntries) {
+            String acct = entry.getEmployee().getBankAccountNo().trim();
+            String empIfsc = entry.getEmployee().getIfscCode();
+            if (empIfsc == null || empIfsc.isBlank()) {
+                empIfsc = "CBIN0280965";
+            } else {
+                empIfsc = empIfsc.trim();
+            }
+
+            BigDecimal net = entry.getNetPayable().setScale(0, java.math.RoundingMode.HALF_UP);
+            boolean isSameBank = empIfsc.toUpperCase().startsWith("SBIN");
+
+            String rowMode = "SAME_BANK".equals(type) ? "ST" : ("OTHER_BANK".equals(type) ? "NEFT" : (isSameBank ? "ST" : "NEFT"));
 
             txt.append(acct).append("#");
             txt.append(empIfsc).append("#");
-            txt.append(dateStr).append("##"); // Date + Empty (Debit)
-            txt.append(net.longValue()).append("##"); // Net (Credit) + Empty (Narration?)
-            // Wait, previous analysis: `Date`#`Empty`#`Net`#`Empty`#`Narration`?
-            // Example: `15/12/2025##10184##NASAR PK#NEFT`
-            // Split: `15/12/2025` (1), `` (2), `10184` (3), `` (4), `NASAR PK` (5).
-            // Yes. `##` before Net, `##` after Net.
-            txt.append("NASAR PK#NEFT\n");
+            txt.append(dateStr).append("##");
+            txt.append(net.longValue()).append("##");
+            txt.append("NASAR PK#").append(rowMode).append("\n");
         }
 
         return txt.toString();

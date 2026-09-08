@@ -56,6 +56,12 @@ export const routes: Routes = [
         canActivate: [authGuard],
         data: { roles: ['USER'] }
     },
+    {
+        path: 'payroll/bank-pay',
+        loadComponent: () => import('./payroll/bank-pay.component').then(m => m.BankPayComponent),
+        canActivate: [authGuard],
+        data: { roles: ['USER', 'ADMIN'] }
+    },
 
     // Billing Routes
     {

@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS employees (
     ip_number VARCHAR(255) UNIQUE,
     bank_account_no VARCHAR(255) UNIQUE,
     ifsc_code VARCHAR(255),
+    aadhaar_number VARCHAR(255) UNIQUE,
+    pan_number VARCHAR(255) UNIQUE,
     status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP,
     inactive_date DATE,

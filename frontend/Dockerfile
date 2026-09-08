@@ -4,10 +4,10 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY . .
-RUN npx ng build --configuration development
+RUN npx ng build --configuration development --output-hashing=all
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine

@@ -94,7 +94,10 @@ public class DataSeeder implements CommandLineRunner {
         jdbcTemplate.execute("DROP TABLE IF EXISTS refresh_tokens CASCADE");
         jdbcTemplate.execute("DROP TABLE IF EXISTS users CASCADE");
 
-        // 2. Recreate tables from db-init.sql
+        // 2. Discard ALL cached plans so PostgreSQL doesn't reuse stale prepared statements
+        jdbcTemplate.execute("DISCARD ALL");
+
+        // 3. Recreate tables from db-init.sql
         org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:db-init.sql");
         String sql = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         String[] statements = sql.split(";");
@@ -104,7 +107,10 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
 
-        // 3. Re-seed default users
+        // 4. Discard again after recreation to ensure all connections get fresh plans
+        jdbcTemplate.execute("DISCARD ALL");
+
+        // 5. Re-seed default users
         if (realm == com.fci.automation.config.RealmEnum.TEST) {
             seedTestRealm();
         } else {

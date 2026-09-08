@@ -72,6 +72,13 @@ import { ConfirmDialogComponent } from './core/components/confirm-dialog.compone
                 </li>
 
                 <li class="nav-item">
+                    <a routerLink="/payroll/bank-pay" class="nav-link text-white btn text-start border-0 mt-2"
+                       (click)="toggleSidebar()">
+                        <i class="bi bi-bank me-2"></i> Bank Pay
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a routerLink="/upload" class="nav-link text-white btn text-start border-0 mt-2"
                        (click)="toggleSidebar()">
                         <i class="bi bi-cloud-upload me-2"></i> Upload

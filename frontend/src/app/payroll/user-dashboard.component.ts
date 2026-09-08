@@ -28,7 +28,7 @@ import { MonthSelectionService } from '../core/services/month-selection.service'
           <div class="row g-4 justify-content-center" *ngIf="!showEntryForm">
              
              <!-- Card 1: New / Open Report -->
-             <div class="col-md-4">
+             <div class="col-md-3">
                  <div class="card h-100 shadow-sm border-0 rounded-4 action-card" (click)="toggleEntryForm('payroll')">
                     <div class="card-body p-4 text-center">
                         <div class="icon-circle mb-3 bg-success-subtle text-success">
@@ -43,7 +43,7 @@ import { MonthSelectionService } from '../core/services/month-selection.service'
 
              
              <!-- Card 2: Casual Attendance -->
-             <div class="col-md-4">
+             <div class="col-md-3">
                  <div class="card h-100 shadow-sm border-0 rounded-4 action-card" (click)="toggleEntryForm('casual')">
                     <div class="card-body p-4 text-center">
                         <div class="icon-circle mb-3 bg-warning-subtle text-warning">
@@ -57,7 +57,7 @@ import { MonthSelectionService } from '../core/services/month-selection.service'
              </div>
 
              <!-- Card 3: History -->
-             <div class="col-md-4">
+             <div class="col-md-3">
                  <div class="card h-100 shadow-sm border-0 rounded-4 action-card" (click)="viewReports()">
                     <div class="card-body p-4 text-center">
                         <div class="icon-circle mb-3 bg-primary-subtle text-primary">
@@ -66,6 +66,20 @@ import { MonthSelectionService } from '../core/services/month-selection.service'
                         <h4 class="fw-bold">History</h4>
                         <p class="text-muted small">View past submissions and reports.</p>
                         <button class="btn btn-outline-primary rounded-pill px-4 mt-2 w-100">View Records</button>
+                    </div>
+                 </div>
+             </div>
+
+             <!-- Card 4: Bank Pay -->
+             <div class="col-md-3">
+                 <div class="card h-100 shadow-sm border-0 rounded-4 action-card border-top border-4 border-info" (click)="openBankPay()">
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-circle mb-3 bg-info-subtle text-info">
+                            <i class="bi bi-bank fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold">Bank Pay</h4>
+                        <p class="text-muted small">Import Excel & generate bank bulk payment text file.</p>
+                        <button class="btn btn-outline-info rounded-pill px-4 mt-2 w-100 text-dark fw-semibold">Open Bank Pay</button>
                     </div>
                  </div>
              </div>
@@ -222,6 +236,10 @@ export class UserDashboardComponent {
 
     viewReports() {
         this.router.navigate(['/reports']);
+    }
+
+    openBankPay() {
+        this.router.navigate(['/payroll/bank-pay']);
     }
 
     startEntry() {

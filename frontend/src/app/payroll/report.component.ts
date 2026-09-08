@@ -9,10 +9,47 @@ import { DocumentService, UploadDocument } from '../core/services/document.servi
 import { environment } from '../../environments/environment';
 
 
+export interface BankSummary {
+  sameBankCount: number;
+  sameBankAmount: number;
+  otherBankCount: number;
+  otherBankAmount: number;
+  totalCount: number;
+  totalAmount: number;
+}
+
 @Component({
   selector: 'app-reports',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styles: [`
+    .text-purple {
+      color: #7c3aed !important;
+    }
+    .bg-purple-subtle {
+      background-color: #f3e8ff !important;
+    }
+    .border-purple-subtle {
+      border-color: #e9d5ff !important;
+    }
+    .btn-outline-purple {
+      color: #7c3aed;
+      border-color: #7c3aed;
+    }
+    .btn-outline-purple:hover,
+    .btn-outline-purple:focus,
+    .btn-outline-purple:active {
+      background-color: #7c3aed !important;
+      color: #ffffff !important;
+      border-color: #7c3aed !important;
+    }
+    .btn-outline-purple:hover .badge,
+    .btn-outline-primary:hover .badge {
+      background-color: rgba(255, 255, 255, 0.25) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+    }
+  `],
   template: `
     <div class="container mt-4">
       
@@ -29,7 +66,7 @@ import { environment } from '../../environments/environment';
              No payroll periods found. Please create one in Dashboard first.
           </div>
 
-          <select *ngIf="!loading && periods.length > 0" class="form-select mb-3" [(ngModel)]="selectedPeriodId" (change)="loadUploadedDocs()">
+          <select *ngIf="!loading && periods.length > 0" class="form-select mb-3" [(ngModel)]="selectedPeriodId" (change)="onPeriodChange()">
             <option *ngFor="let p of periods" [value]="p.id">
                {{ getMonthName(p.month) }} {{ p.year }} ({{ p.status }})
             </option>
@@ -82,14 +119,77 @@ import { environment } from '../../environments/environment';
                   <i class="bi bi-file-text"></i> EPF Return (.txt)
                 </button>
                 
-                <div class="mt-3 border-top pt-2">
-                    <label class="form-label small fw-bold text-muted">Bulk Payment Date</label>
-                    <div class="input-group">
-                        <input type="date" class="form-control form-control-sm" [(ngModel)]="bulkDate">
-                        <button class="btn btn-outline-secondary btn-sm" (click)="download('bulk')" [disabled]="!selectedPeriodId">
-                            <i class="bi bi-file-text"></i> Download (.txt)
-                        </button>
+                <div class="mt-4 border-top pt-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted fw-bold mb-0">
+                      <i class="bi bi-bank"></i> Bulk Payment (SBI)
+                    </h6>
+                    <div class="d-flex align-items-center gap-1">
+                      <span class="text-muted small" style="font-size: 0.75rem;">Date:</span>
+                      <input type="date" class="form-control form-control-sm py-0 px-2" style="width: auto; font-size: 0.8rem;" [(ngModel)]="bulkDate">
                     </div>
+                  </div>
+
+                  <div *ngIf="loadingBankSummary" class="text-center py-2 text-muted small">
+                    <span class="spinner-border spinner-border-sm text-primary me-1"></span> Calculating bank totals...
+                  </div>
+
+                  <div *ngIf="!loadingBankSummary">
+                    <!-- Total Payout Banner -->
+                    <div class="d-flex justify-content-between align-items-center px-3 py-1.5 rounded bg-light border mb-2">
+                      <span class="text-muted fw-semibold small">
+                        <i class="bi bi-cash-stack text-success me-1"></i> Total Payout:
+                      </span>
+                      <span class="fw-bold text-dark">
+                        ₹ {{ (bankSummary?.totalAmount || 0) | number:'1.2-2' }}
+                        <span class="badge bg-secondary-subtle text-secondary border ms-1 font-monospace">{{ bankSummary?.totalCount || 0 }}</span>
+                      </span>
+                    </div>
+
+                    <!-- Same Bank and Other Bank Outline Buttons -->
+                    <div class="d-grid gap-2">
+                      <!-- Same Bank (SBI) -->
+                      <button class="btn btn-outline-primary text-start d-flex justify-content-between align-items-center py-2"
+                              (click)="downloadBulk('SAME_BANK')"
+                              [disabled]="!selectedPeriodId || isDownloadingBulk || (bankSummary?.sameBankCount || 0) === 0">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-bank me-2"></i>
+                          <span class="fw-semibold">Same Bank (SBI)</span>
+                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill ms-2">
+                            {{ bankSummary?.sameBankCount || 0 }}
+                          </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="fw-bold">₹ {{ (bankSummary?.sameBankAmount || 0) | number:'1.2-2' }}</span>
+                          <i class="bi bi-download"></i>
+                        </div>
+                      </button>
+
+                      <!-- Other Bank (NEFT) -->
+                      <button class="btn btn-outline-purple text-start d-flex justify-content-between align-items-center py-2"
+                              (click)="downloadBulk('OTHER_BANK')"
+                              [disabled]="!selectedPeriodId || isDownloadingBulk || (bankSummary?.otherBankCount || 0) === 0">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-arrow-right-circle me-2"></i>
+                          <span class="fw-semibold">Other Bank (NEFT)</span>
+                          <span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill ms-2">
+                            {{ bankSummary?.otherBankCount || 0 }}
+                          </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="fw-bold">₹ {{ (bankSummary?.otherBankAmount || 0) | number:'1.2-2' }}</span>
+                          <i class="bi bi-download"></i>
+                        </div>
+                      </button>
+                    </div>
+
+                    <!-- Fallback: All Combined -->
+                    <div class="d-flex justify-content-end mt-1.5">
+                      <a href="javascript:void(0)" class="text-muted small text-decoration-none" style="font-size: 0.75rem;" (click)="downloadBulk('ALL')" [class.disabled]="!selectedPeriodId || isDownloadingBulk">
+                        <i class="bi bi-file-text me-1"></i> Combined All (.txt)
+                      </a>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -144,6 +244,9 @@ export class ReportComponent implements OnInit {
   periods: PayrollPeriod[] = [];
   loading = true;
   bulkDate: string = new Date().toISOString().split('T')[0];
+  bankSummary: BankSummary | null = null;
+  loadingBankSummary = false;
+  isDownloadingBulk = false;
 
   constructor(
     private http: HttpClient,
@@ -173,14 +276,83 @@ export class ReportComponent implements OnInit {
         }
 
         this.loading = false;
+        this.loadUploadedDocs();
+        this.loadBankSummary();
       },
       error: (err) => {
         console.error('Failed to load periods', err);
         this.loading = false;
       }
     });
+  }
 
+  onPeriodChange() {
     this.loadUploadedDocs();
+    this.loadBankSummary();
+  }
+
+  loadBankSummary() {
+    if (!this.selectedPeriodId) {
+      this.bankSummary = null;
+      return;
+    }
+    this.loadingBankSummary = true;
+    this.http.get<BankSummary>(`${environment.apiUrl}/reports/${this.selectedPeriodId}/bank-summary`).subscribe({
+      next: (summary) => {
+        this.bankSummary = summary;
+        this.loadingBankSummary = false;
+      },
+      error: (err) => {
+        console.error('Failed to load bank summary', err);
+        this.bankSummary = null;
+        this.loadingBankSummary = false;
+      }
+    });
+  }
+
+  downloadBulk(type: 'SAME_BANK' | 'OTHER_BANK' | 'ALL') {
+    if (!this.selectedPeriodId) return;
+
+    this.isDownloadingBulk = true;
+    const url = `${environment.apiUrl}/reports/${this.selectedPeriodId}/bulk?paymentDate=${this.bulkDate}&type=${type}`;
+
+    this.http.get(url, { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        this.isDownloadingBulk = false;
+        const blob = response.body;
+        if (!blob) {
+          this.dialogService.alert('Error', 'File not found or empty response.');
+          return;
+        }
+
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+
+        const p = this.periods.find(p => p.id === this.selectedPeriodId);
+        const m = p ? this.getMonthName(p.month).substring(0, 3).toLowerCase() : 'payout';
+        let filename = `${m}_bulk_payment.txt`;
+        if (type === 'SAME_BANK') filename = `${m}_sbi_same_bank.txt`;
+        if (type === 'OTHER_BANK') filename = `${m}_sbi_other_bank.txt`;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        link.download = filename;
+        link.click();
+        window.URL.revokeObjectURL(downloadUrl);
+      },
+      error: (err) => {
+        this.isDownloadingBulk = false;
+        console.error('Bulk download failed', err);
+        this.dialogService.alert('Error', 'Download failed! ' + (err.statusText || 'Server Error'));
+      }
+    });
   }
 
   uploadedDocs: UploadDocument[] = [];

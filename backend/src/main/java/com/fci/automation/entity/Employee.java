@@ -38,6 +38,12 @@ public class Employee {
     @Column(name = "ifsc_code")
     private String ifscCode;
 
+    @Column(name = "aadhaar_number", unique = true)
+    private String aadhaarNumber;
+
+    @Column(name = "pan_number", unique = true)
+    private String panNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;

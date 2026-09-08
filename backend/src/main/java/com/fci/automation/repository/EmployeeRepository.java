@@ -13,4 +13,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     Optional<Employee> findByIpNumber(String ipNumber);
 
     Optional<Employee> findByBankAccountNo(String bankAccountNo);
+
+    Optional<Employee> findByAadhaarNumber(String aadhaarNumber);
+
+    Optional<Employee> findByPanNumber(String panNumber);
 }

@@ -87,10 +87,16 @@ public class ReportController {
                 .body(txt);
     }
 
+    @GetMapping("/{periodId}/bank-summary")
+    public ResponseEntity<java.util.Map<String, Object>> getBankSummary(@PathVariable UUID periodId) {
+        return ResponseEntity.ok(reportService.getBankSummary(periodId));
+    }
+
     @GetMapping("/{periodId}/bulk")
     public ResponseEntity<String> getBulkTxt(
             @PathVariable UUID periodId,
-            @RequestParam(value = "paymentDate", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate paymentDate) {
+            @RequestParam(value = "paymentDate", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate paymentDate,
+            @RequestParam(value = "type", required = false, defaultValue = "ALL") String type) {
 
         // Default to today if not provided
         if (paymentDate == null) {
@@ -100,8 +106,13 @@ public class ReportController {
         com.fci.automation.entity.PayrollPeriod period = periodRepository.findById(periodId).orElseThrow();
         String monthName = java.time.Month.of(period.getMonth()).name().toLowerCase().substring(0, 3);
         String filename = String.format("%s_bulk_payment.txt", monthName);
+        if ("SAME_BANK".equalsIgnoreCase(type)) {
+            filename = String.format("%s_sbi_same_bank.txt", monthName);
+        } else if ("OTHER_BANK".equalsIgnoreCase(type)) {
+            filename = String.format("%s_sbi_other_bank.txt", monthName);
+        }
 
-        String txt = reportService.generateBulkTxt(periodId, paymentDate);
+        String txt = reportService.generateBulkTxt(periodId, paymentDate, type);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.TEXT_PLAIN)
